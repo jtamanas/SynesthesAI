@@ -33,7 +33,7 @@ if music_request:
     if len(music_request) > 2:
         st.text("Processing your request...")
         playlist_data, playlist_name = generate_playlist(
-            music_request=music_request, debug=False
+            music_request=music_request, debug=True
         )
 
         st.text(dict_to_string(playlist_data))
