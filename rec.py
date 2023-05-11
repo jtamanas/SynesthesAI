@@ -5,6 +5,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from genre_prompt import beginning_of_json, prompt
 import os
 import logging
+from available_genres import recommendation_genres
 
 
 # Set your credentials here
@@ -38,8 +39,7 @@ def get_recommendation_parameters(sp, prompt, debug=True):
  "danceability": 0.8,
  "tempo": 150,
  "loudness": -8,
- "speechiness": 0.5,
- "artists": ["Shakewell", "Yung Gravy"]}"""
+ "speechiness": 0.5}"""
     else:
         # Send the prompt to the OpenAI API
         response = openai.Completion.create(
@@ -65,8 +65,8 @@ def get_recommendation_parameters(sp, prompt, debug=True):
             )
             playlist_data.pop("seed_genres")
 
-        print(playlist_data)
     except json.decoder.JSONDecodeError:
+        print(generated_json)
         print("FAILED TO GENERATE VALID JSON")
 
     print()
@@ -83,12 +83,19 @@ def fix_dict_keys(spotify_search_dict: dict):
                 new_k = f"target_{k}"
 
         new_search_dict[new_k] = spotify_search_dict[k]
-    new_search_dict["seed_genres"] = spotify_search_dict["genres"]
+    new_search_dict["seed_genres"] = filter_genres(spotify_search_dict["genres"])
     return new_search_dict
 
 
 def filter_genres(genre_names):
-    pass
+    remaining = []
+    for genre in genre_names:
+        if genre in recommendation_genres:
+            remaining.append(genre)
+    if not remaining:
+        print(genre_names)
+        raise ValueError("No genres returned!")
+    return remaining
 
 
 def get_artist_ids(sp, artist_names):
@@ -151,11 +158,11 @@ def generate_playlist(music_request=None, debug=False):
     print("Got playlist parameters")
     track_ids = get_track_recommendations(sp, **playlist_data)
     print("Got track ids")
-    # playlist_id = create_spotify_playlist(sp, track_ids, playlist_name=playlist_name)
+    playlist_id = create_spotify_playlist(sp, track_ids, playlist_name=playlist_name)
     print("Made the playlist")
     # sp.start_playback(playlist_id)
     # add_tracks_to_queue(sp, track_ids)
-    return playlist_name
+    return playlist_data, playlist_name
 
 
 if __name__ == "__main__":
