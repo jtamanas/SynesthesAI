@@ -160,7 +160,7 @@ def generate_playlist(music_request=None, debug=False):
     track_ids = get_track_recommendations(sp, **playlist_data)
     print("Got track ids")
     playlist_id = create_spotify_playlist(sp, track_ids, playlist_name=playlist_name)
-    print("Made the playlist")
+    print("Made the playlistMade the playlist")
     # sp.start_playback(playlist_id)
     # add_tracks_to_queue(sp, track_ids)
     return playlist_data, playlist_name
