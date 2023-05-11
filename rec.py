@@ -6,15 +6,16 @@ from genre_prompt import beginning_of_json, prompt
 import os
 import logging
 from available_genres import recommendation_genres
+import streamlit as st
 
 
 # Set your credentials here
-SPOTIPY_CLIENT_ID = os.environ["SPOTIPY_CLIENT_ID"]
-SPOTIPY_CLIENT_SECRET = os.environ["SPOTIPY_CLIENT_SECRET"]
-SPOTIPY_USERNAME = os.environ["SPOTIPY_USERNAME"]
+SPOTIPY_CLIENT_ID = st.secrets["SPOTIPY_CLIENT_ID"]
+SPOTIPY_CLIENT_SECRET = st.secrets["SPOTIPY_CLIENT_SECRET"]
+SPOTIPY_USERNAME = st.secrets["SPOTIPY_USERNAME"]
 
 # Authenticate with the OpenAI API
-openai.api_key = os.environ["OPENAI_API_KEY"]
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 logger = logging.getLogger()
