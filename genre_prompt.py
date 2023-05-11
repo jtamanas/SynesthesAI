@@ -16,7 +16,7 @@ audio_features = """Formatted as: variable_name (range): description
 9. speechiness (0-1): Presence of spoken words. Higher values indicate more speech-like content.
 10. tempo (dict(min=float, max=float)): Estimated tempo in beats per minute.
 11. valence (0-1): Musical positiveness. Higher values indicate more positive-sounding tracks.
-12. popularity (int, 0-100): The popularity of a track is a value between 0 and 100, with 100 being the most popular.
+12. popularity (0-100): Integer representing popularity of a track is a value between 0 and 100, with 100 being the most popular.
 ```"""
 
 prompt = """This is the list of genres available on spotify: {list_of_recommendation_genres}.
@@ -25,7 +25,7 @@ Additionally, here are the audio features available in the spotify api: {audio_f
 
 When asked about what I'm in the mood for, I replied "{{music_request}}". 
 
-Using this information, I want you to make a JSON that contains appropriate values for the attributes listed. Not every attribute needs to be listed, just the ones that you think are important to specify. This JSON will be passed to spotify to make a playlist.
+Using this information, I want you to make a JSON that contains appropriate values for the attributes listed. Not every attribute needs to be listed, just the ones that you think are important to specify. This JSON will be passed to spotify to make a playlist. It should look like `{{beginning_of_json}} [...], "energy": ...`
 
 {{beginning_of_json}}""".format(
     audio_features=audio_features,
