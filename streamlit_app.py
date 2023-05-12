@@ -425,7 +425,7 @@ auth_url = oauth.get_authorize_url()
 # via the "_self" target
 link_html = (
     '<span style="color:green"><a target="_self" href="{url}" >{msg}</a></span>'.format(
-        url=auth_url, msg="I'm ready."
+        url=auth_url, msg="I'm ready. (Hold down and open in new tab on iphone)"
     )
 )
 
