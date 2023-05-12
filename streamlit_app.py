@@ -187,8 +187,8 @@ def app_display_welcome():
         #         ]
         #     )
         # )
-        st.markdown(link_html, unsafe_allow_html=True)
         st.markdown(note_temp)
+        st.markdown(link_html, unsafe_allow_html=True)
 
 
 def get_recommendation_parameters(sp, prompt, debug=True):
@@ -295,6 +295,12 @@ def create_spotify_playlist(sp, track_ids, playlist_name="Test", music_request="
         public=True,
         description=music_request,
     )
+    playlist_url = playlist["external_urls"]["spotify"]
+    playlist_url = '<span style="color:green"><a target="_self" href="{url}" >{msg}</a></span>'.format(
+        url=playlist_url, msg=playlist_name
+    )
+
+    st.markdown(playlist_url, unsafe_allow_html=True)
     playlist_id = playlist["id"]
 
     # Add tracks to the playlist
@@ -417,8 +423,10 @@ auth_url = oauth.get_authorize_url()
 
 # this SHOULD open the link in the same tab when Streamlit Cloud is updated
 # via the "_self" target
-link_html = ' <a target="_self" href="{url}" >{msg}</a> '.format(
-    url=auth_url, msg="Click to login to Spotify!"
+link_html = (
+    '<span style="color:green"><a target="_self" href="{url}" >{msg}</a></span>'.format(
+        url=auth_url, msg="I'm ready."
+    )
 )
 
 if "oauth" not in st.session_state:
@@ -467,4 +475,4 @@ if st.session_state["signed_in"]:
             )
 
             st.text(dict_to_string(playlist_data))
-            st.markdown("_Picture to Playlist coming soon..._")
+            # st.markdown("_Picture to Playlist coming soon..._")
