@@ -25,7 +25,7 @@ Additionally, here are the audio features available in the spotify api: {audio_f
 
 When asked about what I'm in the mood for, I replied "{{music_request}}". 
 
-Using this information, I want you to make a JSON that contains appropriate values for the attributes listed. Not every attribute needs to be listed, just the ones that you think are important to specify. This JSON will be passed to spotify to make a playlist. It should look like `{{beginning_of_json}} [...], "energy": ...`
+Using this information, I want you to make a JSON that contains appropriate values for the attributes listed. Not every attribute needs to be listed, just the ones that you think are important to specify. This JSON will be passed to spotify to make a playlist. Be sure to include an up-to-ten-word summary of my mood as the name of the playlist. The final JSON should look like `{{beginning_of_json}} [...], "playlist_name": ..., "energy": ...`, ...
 
 {{beginning_of_json}}""".format(
     audio_features=audio_features,
