@@ -454,20 +454,21 @@ else:
     app_display_welcome()
 
 # after auth, get user info
-
 # only display the following after login
 ### is there another way to do this? clunky to have everything in an if:
+
+if "music_request" not in st.session_state:
+    st.session_state["music_request"] = ""
+
 if st.session_state["signed_in"]:
     sp = st.session_state["sp"]
     user = sp.current_user()
     name = user["display_name"]
     SPOTIPY_USERNAME = user["id"]
 
-    music_request = st.text_area(
-        "\"I want to listen to Van Gogh’s starry night .\""
-    )
+    music_request = st.text_area('"I want to listen to Van Gogh’s starry night ."')
 
-    if music_request:
+    if music_request and music_request != st.session_state["music_request"]:
         if len(music_request) > 2:
             st.text("Processing your request...")
             playlist_data, playlist_name = generate_playlist(
@@ -476,3 +477,4 @@ if st.session_state["signed_in"]:
 
             st.text(dict_to_string(playlist_data))
             # st.markdown("_Picture to Playlist coming soon..._")
+            st.session_state["music_request"]
