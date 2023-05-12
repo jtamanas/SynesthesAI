@@ -464,7 +464,7 @@ if st.session_state["signed_in"]:
     SPOTIPY_USERNAME = user["id"]
 
     music_request = st.text_area(
-        "\"It's a beautiful Spring day in New York City. It's really feeling like I'm the main character of some generic blockbuster movie right now. Give me that juicy, tasty, normie shit. I want the most mainstream songs you can find baby.\""
+        "\"I want to listen to Van Gogh’s starry night .\""
     )
 
     if music_request:
