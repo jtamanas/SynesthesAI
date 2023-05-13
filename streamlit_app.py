@@ -21,6 +21,7 @@ from genre_prompt import beginning_of_json, prompt
 import json
 import openai
 from available_genres import recommendation_genres
+from css import css
 
 # spotify connection set up
 
@@ -319,7 +320,7 @@ def create_spotify_playlist(sp, track_ids, playlist_name="Test", music_request="
         description=music_request,
     )
     playlist_url = playlist["external_urls"]["spotify"]
-    playlist_url = '<span style="color:green"><a target="_self" href="{url}" >{msg}</a></span>'.format(
+    playlist_url = '<a target="_blank" href="{url}" >Now on Spotify: {msg}</a>'.format(
         url=playlist_url, msg=playlist_name
     )
 
@@ -399,11 +400,14 @@ def generate_playlist(
 
     # sp.start_playback(playlist_id)
     # add_tracks_to_queue(sp, track_ids)
-    return target_range_query, playlist_name
+    return raw_playlist_query, playlist_name
 
+
+# setup the page
+# Add some styling with CSS selectors
+st.markdown(css, unsafe_allow_html=True)
 
 # app session variable initialization
-
 if "signed_in" not in st.session_state:
     st.session_state["signed_in"] = False
 if "cached_token" not in st.session_state:
@@ -438,12 +442,10 @@ st.session_state["oauth"] = oauth
 # retrieve auth url
 auth_url = oauth.get_authorize_url()
 
-# this SHOULD open the link in the same tab when Streamlit Cloud is updated
-# via the "_self" target
-link_html = (
-    '<span style="color:green"><a target="_self" href="{url}" >{msg}</a></span>'.format(
-        url=auth_url, msg="I'm ready. (Hold down and open in new tab on iphone)"
-    )
+link_html = '<a target="_blank" href="{url}" >{msg}</a>'.format(
+    url=auth_url,
+    msg="Sign into Spotify.",
+    unsafe_allow_html=True,
 )
 
 if "oauth" not in st.session_state:
@@ -475,7 +477,7 @@ else:
 ### is there another way to do this? clunky to have everything in an if:
 
 if "music_request" not in st.session_state:
-    st.session_state["music_request"] = ""
+    st.session_state["music_request"] = "I want to listen to Van Gogh’s starry night"
 
 if st.session_state["signed_in"]:
     sp = st.session_state["sp"]
@@ -483,13 +485,13 @@ if st.session_state["signed_in"]:
     name = user["display_name"]
     SPOTIPY_USERNAME = user["id"]
 
-    music_request = st.text_area("", "I want to listen to Van Gogh’s starry night")
+    music_request = st.text_area("", st.session_state["music_request"])
 
     if music_request and music_request != st.session_state["music_request"]:
         if len(music_request) > 2:
             st.text("Processing your request...")
             playlist_data, playlist_name = generate_playlist(
-                music_request=music_request, debug=True
+                music_request=music_request, debug=False
             )
 
             st.text(dict_to_string(playlist_data))
