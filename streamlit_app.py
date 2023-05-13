@@ -22,31 +22,9 @@ import json
 import openai
 from available_genres import recommendation_genres
 from css import css
+from utils import dict_to_string
 
 # spotify connection set up
-
-
-# base func definitions
-
-
-def dict_to_string(d):
-    """
-    Converts a dictionary into a pretty string.
-
-    Args:
-        d (dict): A dictionary with string keys and values that are numbers or lists.
-
-    Returns:
-        str: A pretty string representation of the dictionary.
-    """
-    lines = []
-    for key, value in d.items():
-        if isinstance(value, list):
-            value_str = "[" + ", ".join(str(v) for v in value) + "]"
-        else:
-            value_str = str(value)
-        lines.append(f"{key}: {value_str}")
-    return "\n".join(lines)
 
 
 def get_token(oauth, code):
@@ -61,79 +39,6 @@ def get_token(oauth, code):
 def sign_in(token):
     sp = spotipy.Spotify(auth=token)
     return sp
-
-
-def get_correct_limit(stop, start):
-    """
-    All credit to https://github.com/irenechang1510 for this function idea.
-    """
-
-    # start at 50 and move backwards until correct timestamp is found
-    # re run the API call until 'before' is greater than the stop timestamp
-    limit = 50
-    while limit > 0:
-        obj = sp.current_user_recently_played(before=start, limit=limit)
-        mark = int(obj["cursors"]["before"])
-
-        # get the track played right after the stop timestamp
-        if mark > stop:
-            break
-        # otherwise, decrease the limit by 1 and try again
-        limit -= 1
-
-    return limit
-
-
-### in the end, this endpoint is simply broken
-### cannot do anything until Spotify fixes it
-def get_recents_all(since):
-    # for some reason, you have to move backwards instead of forward
-    # the after header seems pointless because it still starts at current time
-    # but the next() method returns a results object with no 'next' dict element?
-
-    now = int(time.mktime(dt.datetime.now().timetuple())) * 1000
-    start = now
-
-    tracks = []
-    while start > since:
-        results = sp.current_user_recently_played(before=start, limit=50)
-        try:
-            next_stop = int(results["cursors"]["before"])
-        except:
-            next_stop = since
-        # eventually, the next stop will move past the desired since timestamp
-        if next_stop < since:
-            last_limit = get_correct_limit(since, start)
-            if last_limit != 0:
-                results = sp.current_user_recently_played(
-                    before=start, limit=last_limit
-                )
-            else:
-                break
-        tracks.extend(results["items"])
-        start = next_stop
-    return tracks
-
-
-def get_playlists_all(username):
-    results = sp.user_playlists(username)
-    playlists = results["items"]
-    while results["next"]:
-        results = sp.next(results)
-        playlists.extend(results["items"])
-    return playlists
-
-
-def get_tracks_all(username, playlist_id):
-    results = sp.user_playlist_tracks(username, playlist_id)
-    tracks = results["items"]
-    while results["next"]:
-        results = sp.next(results)
-        tracks.extend(results["items"])
-    return tracks
-
-
-# app func definitions
 
 
 def app_get_token():
@@ -180,14 +85,6 @@ def app_display_welcome():
 
     if not st.session_state["signed_in"]:
         st.markdown(welcome_msg)
-        # st.write(
-        #     " ".join(
-        #         [
-        #             "No tokens found for this session. Please log in by",
-        #             "clicking the link below.",
-        #         ]
-        #     )
-        # )
         st.markdown(note_temp)
         st.markdown(link_html, unsafe_allow_html=True)
 
@@ -415,12 +312,6 @@ if "cached_token" not in st.session_state:
 if "code" not in st.session_state:
     st.session_state["code"] = ""
 
-
-# import secrets from streamlit deployment
-cid = st.secrets["SPOTIPY_CLIENT_ID"]
-csecret = st.secrets["SPOTIPY_CLIENT_SECRET"]
-uri = st.secrets["SPOTIPY_REDIRECT_URI"]
-
 # set scope and establish connection
 scopes = " ".join(
     [
@@ -434,7 +325,10 @@ scopes = " ".join(
 
 # create oauth object
 oauth = SpotifyOAuth(
-    scope=scopes, redirect_uri=uri, client_id=cid, client_secret=csecret
+    scope=scopes,
+    redirect_uri=st.secrets["SPOTIPY_REDIRECT_URI"],
+    client_id=st.secrets["SPOTIPY_CLIENT_ID"],
+    client_secret=st.secrets["SPOTIPY_CLIENT_SECRET"],
 )
 # store oauth in session
 st.session_state["oauth"] = oauth
