@@ -14,8 +14,6 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import streamlit as st
 import os
-import datetime as dt
-import time
 import random
 from genre_prompt import beginning_of_json, prompt
 import json
@@ -29,7 +27,6 @@ def get_token(oauth, code):
     token = oauth.get_access_token(code, as_dict=False, check_cache=False)
     # remove cached token saved in directory
     os.remove(".cache")
-
     # return the token
     return token
 
@@ -60,7 +57,6 @@ def app_sign_in():
     else:
         st.session_state["signed_in"] = True
         app_display_welcome()
-        st.success("Sign in success!")
 
     return sp
 
@@ -68,8 +64,8 @@ def app_sign_in():
 def app_display_welcome():
     # define welcome
     welcome_msg = """
-    Write a really specific description of the kind of mood you're in. I'll use that information
-    to build a playlist just for you with music that spotify thinks you'll like.
+    Write a really specific description of your mood. I'll pass that onto Spotify
+    to build a playlist just for you.
     """
 
     # define temporary note
@@ -79,7 +75,9 @@ def app_display_welcome():
     _"I'm DJing a really cool party in Manhattan. I need music that won't interrupt the conversation but will get people moving and bobbing their heads. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."_
     """
 
-    st.title("Synesthesai")
+    st.markdown(
+        "# Synesthes<span style='color:#ff6319'>ai</span>", unsafe_allow_html=True
+    )
 
     if not st.session_state["signed_in"]:
         st.markdown(welcome_msg)
@@ -313,11 +311,8 @@ if "code" not in st.session_state:
 # set scope and establish connection
 scopes = " ".join(
     [
-        "user-read-private",
         "playlist-read-private",
-        "playlist-modify-private",
         "playlist-modify-public",
-        "user-read-recently-played",
     ]
 )
 
@@ -386,6 +381,6 @@ if st.session_state["signed_in"]:
                 music_request=music_request, debug=False
             )
 
+            st.session_state["music_request"] = music_request
             st.text(dict_to_string(playlist_data))
             # st.markdown("_Picture to Playlist coming soon..._")
-            st.session_state["music_request"]

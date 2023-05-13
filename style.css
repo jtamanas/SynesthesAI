@@ -1,3 +1,48 @@
+:root {
+    --orange: #ff6319;
+    --grey: #808183;
+    --green: #1DB954;
+}
+
 a[href] {
-    color: #1DB954;
+    color: var(--green);
+}
+
+p {
+    font-family: Pitch, monospace;
+    color: var(--grey);
+    font-size: 1.0em;
+    /* Default color for normal text */
+}
+
+
+/* Text in the text area */
+.st-ae {
+    font-family: Pitch, monospace;
+    color: var(--grey);
+    font-size: 1.0em;
+    /* Default color for normal text */
+}
+
+/* The border colors for the text area box when clicked */
+.st-cm {
+    border-left-color: var(--orange);
+}
+
+.st-cn {
+    border-right-color: var(--orange);
+}
+
+.st-co {
+    border-top-color: var(--orange);
+}
+
+.st-cp {
+    border-bottom-color: var(--orange);
+}
+
+/* Title */
+h1 {
+    font-size: 7rem;
+    font-family: Helvetica Neue;
 }

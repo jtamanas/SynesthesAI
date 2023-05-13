@@ -16,7 +16,7 @@ audio_features = """Formatted as: variable_name (range): description. For each o
 9. speechiness (0-1): Presence of spoken words. Higher values indicate more speech-like content.
 10. tempo (int): Estimated tempo in beats per minute.
 11. valence (0-1): Musical positiveness. Higher values indicate more positive-sounding tracks.
-12. popularity (0-100): Integer representing popularity of a track is a value between 0 and 100, with 100 being the most popular.
+12. popularity (0-100): Integer representing popularity of a track is a value between 0 and 100, with 100 being the most popular. 70+ is very well known.
 ```"""
 
 prompt = """Here are the audio features available in the spotify api: {audio_features}
