@@ -364,7 +364,9 @@ else:
 ### is there another way to do this? clunky to have everything in an if:
 
 if "music_request" not in st.session_state:
-    st.session_state["music_request"] = "I want to listen to Van Gogh’s starry night"
+    st.session_state[
+        "music_request"
+    ] = "i want to listen to van goghs starry night 👨‍🎨🌃🌌🖼️ "
 
 if st.session_state["signed_in"]:
     sp = st.session_state["sp"]
