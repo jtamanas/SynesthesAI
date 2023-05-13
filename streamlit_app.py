@@ -209,13 +209,14 @@ def get_playlist_query_with_targets(query_dict):
 
 def get_recommendation_parameters(sp, prompt, debug=True):
     if debug:
-        generated_json = """{"genres":["trap", "dancehall", "rap", "hip-hop"],
- "artists": ["Shakewell", "Yung Gravy"],
- "energy": 0.68,
- "danceability": 0.8,
- "tempo": 150,
- "loudness": -8,
- "speechiness": 0.5}"""
+        generated_json = """{"genres":["classical", "ambient"],
+"playlist_name": "[TEST] Starry Night Vibes",
+"energy": {"min": 0, "max": 0.3},
+"danceability": {"min": 0, "max": 0.3},
+"valence": {"min": 0.6, "max": 0.9},
+"acousticness": {"min": 0.7, "max": 1},
+"artists": ["Ludovico Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
+}"""
     else:
         # Send the prompt to the OpenAI API
         response = openai.Completion.create(
@@ -228,6 +229,7 @@ def get_recommendation_parameters(sp, prompt, debug=True):
         )
         # Extract the generated JSON from the response
         generated_json = beginning_of_json + response.choices[0].text.strip()
+        print(generated_json)
     try:
         playlist_data = json.loads(generated_json)
 
@@ -345,7 +347,19 @@ def get_seed_tracks_query(playlist_data, track_ids, n=5):
     return playlist_data
 
 
-def generate_playlist(music_request=None, debug=False, num_songs=20):
+def generate_playlist(
+    music_request=None, debug=False, num_tracks=20, num_enhanced_tracks_to_add=3
+):
+    """
+    num_enhanced_tracks_to_add: is small because searching by target is often not very precise.
+    But if we take the top k searches from a targetted search and then use those, it's possible
+    that the resulting recommendations are more similar to the targets, than if we were to
+    just search by target alone.
+        This is because there are hidden attributes that are not available as targets for us,
+        but that could be correlated amongst the top k.
+
+        Not a good explanation, but it makes sense I swear.
+    """
     music_request = music_request or ""
 
     formatted_prompt = prompt.format(
@@ -358,22 +372,22 @@ def generate_playlist(music_request=None, debug=False, num_songs=20):
     range_playlist_query = get_playlist_query_with_ranges(raw_playlist_query)
     track_ids = get_track_recommendations(sp, **range_playlist_query)
     print(len(track_ids))
-    while len(track_ids) < num_songs:
+    while len(track_ids) < num_tracks:
         print("Enhancing the playlist...")
         # The previous search was too narrow so we relax the constraints
-        playlist_data = get_playlist_query_with_targets(range_playlist_query)
-        print(playlist_data)
+        target_range_query = get_playlist_query_with_targets(raw_playlist_query)
+        print(target_range_query)
         if track_ids:
-            playlist_data = get_seed_tracks_query(playlist_data, track_ids)
-        print(playlist_data)
+            target_range_query = get_seed_tracks_query(target_range_query, track_ids)
+        print(target_range_query)
 
-        new_track_ids = get_track_recommendations(sp, **playlist_data)
-        track_ids.extend(new_track_ids[: num_songs - len(track_ids)])
+        new_track_ids = get_track_recommendations(sp, **target_range_query)
+        track_ids.extend(new_track_ids[:num_enhanced_tracks_to_add])
         print(len(track_ids))
     print("Got track ids")
 
-    if "playlist_name" in playlist_data:
-        playlist_name = playlist_data["playlist_name"]
+    if "playlist_name" in raw_playlist_query:
+        playlist_name = raw_playlist_query["playlist_name"]
     else:
         playlist_name = "For your mood"
 
@@ -381,59 +395,11 @@ def generate_playlist(music_request=None, debug=False, num_songs=20):
         sp, track_ids, playlist_name=playlist_name, music_request=music_request
     )
     print("Made the playlist")
+    st.balloons()
+
     # sp.start_playback(playlist_id)
     # add_tracks_to_queue(sp, track_ids)
-    return playlist_data, playlist_name
-
-
-def app_remove_recent(username):
-    nm_playlist = st.session_state["pl_selected"]
-    since_date = st.session_state["since_date"]
-    since_time = st.session_state["since_time"]
-    nm_playlist_new = st.session_state["new_name"]
-    shuffle = st.session_state["shuffle"]
-
-    # get playlist id of selected playlist
-    playlists = get_playlists_all(username)
-    playlist_names = [x["name"] for x in playlists]
-    playlist_ids = [x["id"] for x in playlists]
-    pl_index = playlist_names.index(nm_playlist)
-    pl_selected_id = playlist_ids[pl_index]
-
-    # get playlist tracks of selected playlist
-    pl_tracks = get_tracks_all(username, pl_selected_id)
-    pl_ids = [x["track"]["id"] for x in pl_tracks]
-
-    # get listening history
-    # combine date inputs to datetime object
-    since_combined = dt.datetime.combine(since_date, since_time)
-    # needs to be in milliseconds
-    since_unix = int(time.mktime(since_combined.timetuple())) * 1000
-    recent_tracks = get_recents_all(since_unix)
-    recent_ids = [x["track"]["id"] for x in recent_tracks]
-
-    # create new playlist, info of playlist returned
-    new_pl = sp.user_playlist_create(user=username, name=nm_playlist_new)
-    # need to get id of new playlist
-    new_pl_id = new_pl["id"]
-
-    # remove recently played from selected playlist
-    new_tracks = [x for x in pl_ids if x not in recent_ids]
-
-    # shuffle if desired
-    if shuffle:
-        random.shuffle(new_tracks)
-
-    # add tracks to new playlist!
-    # can only write 100 at a time to the spotify API
-    chunk_size = 100
-    for i in range(0, len(new_tracks), chunk_size):
-        chunk = new_tracks[i : i + chunk_size]
-        sp.user_playlist_add_tracks(user=username, playlist_id=new_pl_id, tracks=chunk)
-
-    # gotta do a celly
-    st.success("New playlist created! Check your Spotify App")
-    st.balloons()
+    return target_range_query, playlist_name
 
 
 # app session variable initialization
@@ -523,7 +489,7 @@ if st.session_state["signed_in"]:
         if len(music_request) > 2:
             st.text("Processing your request...")
             playlist_data, playlist_name = generate_playlist(
-                music_request=music_request, debug=False
+                music_request=music_request, debug=True
             )
 
             st.text(dict_to_string(playlist_data))
