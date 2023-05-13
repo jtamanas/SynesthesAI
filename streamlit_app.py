@@ -185,11 +185,15 @@ def get_artist_ids(sp, artist_names):
 
 
 def get_track_recommendations(sp, genres=[""], **kwargs):
+    # im not sure if list(set(tracks)) removes duplicates so I'll only do it on track ids
     tracks = sp.recommendations(**kwargs)["tracks"]
     track_names = [
         f'{track["name"]} - {track["artists"][0]["name"]}' for track in tracks
     ]
     track_ids = [track["id"] for track in tracks]
+
+    # remove duplicates
+    track_ids = list(set(track_ids))
     print("\n".join(track_names))
     return track_ids
 
