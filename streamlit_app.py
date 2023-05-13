@@ -196,7 +196,7 @@ def range_min_max_to_target(min_max_dict):
     return {"target": (min_max_dict["min"] + min_max_dict["max"]) / 2}
 
 
-def convert_min_max_parameters_to_target(query_dict):
+def get_playlist_query_with_targets(query_dict):
     """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
     new_query_dict = {}
     for key, val in query_dict.items():
@@ -231,9 +231,7 @@ def get_recommendation_parameters(sp, prompt, debug=True):
     try:
         playlist_data = json.loads(generated_json)
 
-        playlist_data = fix_dict_keys(playlist_data)
-
-        print(playlist_data)
+        playlist_data["seed_genres"] = filter_genres(playlist_data["genres"])
 
         if "artists" in playlist_data:
             playlist_data["seed_artists"] = get_artist_ids(sp, playlist_data["artists"])
@@ -249,7 +247,7 @@ def get_recommendation_parameters(sp, prompt, debug=True):
     return playlist_data
 
 
-def fix_dict_keys(spotify_search_dict: dict):
+def get_playlist_query_with_ranges(spotify_search_dict: dict):
     new_search_dict = {}
     for k, v in spotify_search_dict.items():
         if isinstance(v, dict):
@@ -257,7 +255,6 @@ def fix_dict_keys(spotify_search_dict: dict):
                 new_search_dict[f"{range_key}_{k}"] = range_val
         else:
             new_search_dict[k] = spotify_search_dict[k]
-    new_search_dict["seed_genres"] = filter_genres(spotify_search_dict["genres"])
     return new_search_dict
 
 
@@ -358,13 +355,13 @@ def generate_playlist(music_request=None, debug=False, num_songs=20):
         sp, formatted_prompt, debug=debug
     )
     print("Got playlist parameters")
-    range_playlist_query = fix_dict_keys(raw_playlist_query)
+    range_playlist_query = get_playlist_query_with_ranges(raw_playlist_query)
     track_ids = get_track_recommendations(sp, **range_playlist_query)
     print(len(track_ids))
     while len(track_ids) < num_songs:
         print("Enhancing the playlist...")
         # The previous search was too narrow so we relax the constraints
-        playlist_data = convert_min_max_parameters_to_target(range_playlist_query)
+        playlist_data = get_playlist_query_with_targets(range_playlist_query)
         print(playlist_data)
         if track_ids:
             playlist_data = get_seed_tracks_query(playlist_data, track_ids)
