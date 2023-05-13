@@ -281,6 +281,9 @@ def generate_playlist(
 
         new_track_ids = get_track_recommendations(sp, **target_range_query)
         track_ids.extend(new_track_ids[:num_enhanced_tracks_to_add])
+
+        # remove duplicate track ids
+        track_ids = list(set(track_ids))
         print(len(track_ids))
     print("Got track ids")
 
