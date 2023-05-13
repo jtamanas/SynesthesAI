@@ -24,8 +24,6 @@ from available_genres import recommendation_genres
 from css import css
 from utils import dict_to_string
 
-# spotify connection set up
-
 
 def get_token(oauth, code):
     token = oauth.get_access_token(code, as_dict=False, check_cache=False)
