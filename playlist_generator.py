@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 from spotify_handler import SpotifyHandler
-from genre_prompt import beginning_of_json, prompt
+from prompts.constants import beginning_of_json
 from available_genres import recommendation_genres
 import json
 import random
@@ -153,6 +153,17 @@ class PlaylistGenerator:
         print(f"Playlist '{playlist_name}' created and tracks added successfully!")
         return playlist_id
 
+    def set_playlist_cover_image(self, playlist_id, image_b64):
+        try:
+            print("IMAGE BYECODE", image_b64)
+            self.spotify_handler.spotify.playlist_upload_cover_image(
+                playlist_id, image_b64
+            )
+            print("Uploaded playlist cover photo")
+        except Exception as e:
+            print("FAILED to upload playlist photo")
+            print(e)
+
     def get_seed_tracks_query(self, playlist_data, track_ids, n=5):
         random_tracks = random.sample(track_ids, min(n, len(track_ids)))
         for key in ["seed_genres", "seed_artists", "seed_tracks"]:
@@ -164,6 +175,7 @@ class PlaylistGenerator:
     def generate_playlist(
         self,
         username,
+        prompt,
         music_request=None,
         debug=False,
         num_tracks=20,
@@ -210,4 +222,4 @@ class PlaylistGenerator:
         )
         print("Made the playlist")
         st.balloons()
-        return raw_playlist_query, playlist_name
+        return raw_playlist_query, playlist_id

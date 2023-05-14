@@ -137,3 +137,4 @@ dmypy.json
 # all files with a leading .
 \.*
 deployment/*
+cartoon_snail.png

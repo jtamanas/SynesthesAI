@@ -1,6 +1,9 @@
+from image_handler import ImageHandler
 from spotify_handler import SpotifyHandler
 from playlist_generator import PlaylistGenerator
 import streamlit as st
+import prompts.mood
+import prompts.image
 from css import css
 from utils import dict_to_string
 
@@ -88,22 +91,45 @@ class App:
             username = user["id"]
 
             music_request = st.text_area(
-                "", st.session_state["music_request"], height=200
+                "Describe your mood.",
+                st.session_state["music_request"],
+                height=200,
+                label_visibility="hidden",
             )
+
+            uploaded_image = st.file_uploader(
+                "Upload an image to inspire your playlist.",
+                type=["png", "jpg"],
+            )
+
+            if uploaded_image:
+                prompt = prompts.image.prompt
+                image_handler = ImageHandler(uploaded_image)
+                with st.spinner("describing your image..."):
+                    music_request = image_handler.describe()
+            else:
+                prompt = prompts.mood.prompt
 
             if music_request and music_request != st.session_state["music_request"]:
                 if len(music_request) > 2:
-                    st.text("Processing your request...")
-                    (
-                        playlist_data,
-                        playlist_name,
-                    ) = self.playlist_generator.generate_playlist(
-                        username=username, music_request=music_request, debug=False
-                    )
+                    with st.spinner("making your playlist..."):
+                        (
+                            playlist_data,
+                            playlist_id,
+                        ) = self.playlist_generator.generate_playlist(
+                            username=username,
+                            prompt=prompt,
+                            music_request=music_request,
+                            debug=False,
+                        )
 
-                    st.session_state["music_request"] = music_request
-                    st.text(dict_to_string(playlist_data))
-                    # st.markdown("_Picture to Playlist coming soon..._")
+                        if uploaded_image:
+                            self.playlist_generator.set_playlist_cover_image(
+                                playlist_id, image_handler.image_b64
+                            )
+
+                        st.session_state["music_request"] = music_request
+                        st.text(dict_to_string(playlist_data))
 
 
 if __name__ == "__main__":

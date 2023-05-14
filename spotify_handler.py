@@ -14,8 +14,9 @@ class SpotifyHandler:
     def create_oauth(self):
         scopes = " ".join(
             [
-                "playlist-read-private",
+                # "playlist-read-private",
                 "playlist-modify-public",
+                "ugc-image-upload",
             ]
         )
         return SpotifyOAuth(
