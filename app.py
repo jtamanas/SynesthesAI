@@ -13,9 +13,12 @@ class App:
         self.spotify_handler = spotify_handler
         self.playlist_generator = PlaylistGenerator(spotify_handler=spotify_handler)
 
-    def display_welcome(
-        self,
-    ):
+    def title(self):
+        st.markdown(
+            "# Synesthes<span style='color:#ff6319'>ai</span>", unsafe_allow_html=True
+        )
+
+    def display_welcome(self):
         # define welcome
         welcome_msg = """
         Write a really specific description of your mood. I'll pass that onto Spotify
@@ -36,9 +39,7 @@ class App:
             unsafe_allow_html=True,
         )
 
-        st.markdown(
-            "# Synesthes<span style='color:#ff6319'>ai</span>", unsafe_allow_html=True
-        )
+        self.title()
 
         if not st.session_state["signed_in"]:
             st.markdown(welcome_msg)
@@ -80,6 +81,7 @@ class App:
             ] = "i want to listen to van goghs starry night 👨‍🎨🌃🌌🖼️ "
 
         if st.session_state["signed_in"]:
+            self.title()
             # sp = st.session_state["sp"]
             user = self.spotify_handler.spotify.current_user()
             # name = user["display_name"]
