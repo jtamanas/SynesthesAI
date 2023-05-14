@@ -6,9 +6,6 @@ Created on Tue Feb  1 19:35:20 2022
 
 but huge shoutout to @chorg for figuring out how to log into spotify https://github.com/chorgan182/PlaylistPreserver/blob/qry-param-method/playlist_preserver_app.py
 """
-
-# setup
-
 # libraries
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -61,30 +58,6 @@ def app_sign_in():
     return sp
 
 
-def app_display_welcome():
-    # define welcome
-    welcome_msg = """
-    Write a really specific description of your mood. I'll pass that onto Spotify
-    to build a playlist just for you.
-    """
-
-    # define temporary note
-    note_temp = """
-    Example: 
-    
-    _"I'm DJing a really cool party in Manhattan. I need music that won't interrupt the conversation but will get people moving and bobbing their heads. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."_
-    """
-
-    st.markdown(
-        "# Synesthes<span style='color:#ff6319'>ai</span>", unsafe_allow_html=True
-    )
-
-    if not st.session_state["signed_in"]:
-        st.markdown(welcome_msg)
-        st.markdown(note_temp)
-        st.markdown(link_html, unsafe_allow_html=True)
-
-
 def range_min_max_to_target(min_max_dict):
     """Takes in a dictionary with min,max keys. Returns a dictionary with target keys where target=mean(min, max)"""
     return {"target": (min_max_dict["min"] + min_max_dict["max"]) / 2}
@@ -130,9 +103,18 @@ def get_recommendation_parameters(sp, prompt, debug=True):
         playlist_data["seed_genres"] = filter_genres(playlist_data["genres"])
 
         if "artists" in playlist_data:
-            playlist_data["seed_artists"] = get_artist_ids(sp, playlist_data["artists"])
+            playlist_data["seed_artists"] = get_ids_from_search(
+                sp, playlist_data["artists"], search_type="artist"
+            )
             if len(playlist_data["seed_artists"]) > 1:
                 playlist_data["seed_genres"] = playlist_data["seed_genres"][:1]
+
+        if "tracks" in playlist_data:
+            playlist_data["seed_tracks"] = get_ids_from_search(
+                sp, playlist_data["tracks"], search_type="tracks"
+            )
+            if len(playlist_data["seed_tracks"]) > 1:
+                playlist_data["seed_artists"] = playlist_data["seed_artists"][:1]
 
     except json.decoder.JSONDecodeError:
         print(generated_json)
@@ -170,18 +152,19 @@ def find_artist(sp, artist_id):
     return sp.artist(uri)
 
 
-def get_artist_ids(sp, artist_names):
+def get_ids_from_search(sp, names, search_type="artist"):
+    """search_type can be artist or tracks currently"""
     print("getting artists ids")
-    artists = []
-    for artist_name in artist_names:
-        print(artist_name)
+    pieces = []
+    for name in names:
+        print(name)
         # there's some weirdness with the search. The limit=1
         # result is not the top result for some reason.
         # get top 10 and then only look at top 1
-        result = sp.search(artist_name, type="artist", limit=10)
-        artists.append(result["artists"]["items"][0]["id"])
+        result = sp.search(name, type=search_type, limit=10)
+        pieces.append(result[f"{search_type}s"]["items"][0]["id"])
 
-    return artists
+    return pieces
 
 
 def get_track_recommendations(sp, genres=[""], **kwargs):
@@ -301,6 +284,30 @@ def generate_playlist(
     # sp.start_playback(playlist_id)
     # add_tracks_to_queue(sp, track_ids)
     return raw_playlist_query, playlist_name
+
+
+def app_display_welcome():
+    # define welcome
+    welcome_msg = """
+    Write a really specific description of your mood. I'll pass that onto Spotify
+    to build a playlist just for you.
+    """
+
+    # define temporary note
+    note_temp = """
+    Example: 
+    
+    _"I'm DJing a really cool party in Manhattan. I need music that won't interrupt the conversation but will get people moving and bobbing their heads. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."_
+    """
+
+    st.markdown(
+        "# Synesthes<span style='color:#ff6319'>ai</span>", unsafe_allow_html=True
+    )
+
+    if not st.session_state["signed_in"]:
+        st.markdown(welcome_msg)
+        st.markdown(note_temp)
+        st.markdown(link_html, unsafe_allow_html=True)
 
 
 # setup the page
