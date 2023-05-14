@@ -27,7 +27,7 @@ class App:
 
         # define temporary note
         note_temp = """
-        Example: 
+        
         
         _"i want to listen to van goghs starry night 👨‍🎨🌃🌌🖼️"_
         """
@@ -87,7 +87,9 @@ class App:
             # name = user["display_name"]
             username = user["id"]
 
-            music_request = st.text_area("", st.session_state["music_request"])
+            music_request = st.text_area(
+                "", st.session_state["music_request"], height=200
+            )
 
             if music_request and music_request != st.session_state["music_request"]:
                 if len(music_request) > 2:
