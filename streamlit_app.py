@@ -29,7 +29,7 @@ class App:
         note_temp = """
         Example: 
         
-        _"I'm DJing a really cool party in Manhattan. I need music that won't interrupt the conversation but will get people moving and bobbing their heads. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."_
+        _"i want to listen to van goghs starry night 👨‍🎨🌃🌌🖼️"_
         """
         auth_url = self.spotify_handler.oauth.get_authorize_url()
 
@@ -78,7 +78,7 @@ class App:
         if "music_request" not in st.session_state:
             st.session_state[
                 "music_request"
-            ] = "i want to listen to van goghs starry night 👨‍🎨🌃🌌🖼️ "
+            ] = "I'm DJing a really cool party in Manhattan. I need music that won't interrupt the conversation but will get people moving and bobbing their heads. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."
 
         if st.session_state["signed_in"]:
             self.title()
