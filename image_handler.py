@@ -4,13 +4,14 @@ from typing import BinaryIO
 import base64
 from PIL import Image
 from io import BytesIO
+import os
 
 
 class ImageHandler:
     def __init__(self, image_file: BinaryIO) -> None:
         self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
-        self.api_key = st.secrets["REPLICATE_API_KEY"]
         self.image_file = image_file
+        os.environ["REPLICATE_API_KEY"] = st.secrets["REPLICATE_API_KEY"]
 
     def resize_and_convert(self, image):
         im = Image.open(image)
