@@ -63,7 +63,7 @@ class PlaylistGenerator:
 
             if "tracks" in playlist_data:
                 playlist_data["seed_tracks"] = self.get_ids_from_search(
-                    playlist_data["tracks"], search_type="tracks"
+                    playlist_data["tracks"], search_type="track"
                 )
                 if len(playlist_data["seed_tracks"]) > 1:
                     playlist_data["seed_artists"] = playlist_data["seed_artists"][:1]
