@@ -36,6 +36,7 @@ python-dateutil==2.8.2
 pytz==2023.3
 pytz-deprecation-shim==0.1.0.post0
 redis==4.5.5
+replicate
 requests==2.30.0
 rich==13.3.5
 six==1.16.0
