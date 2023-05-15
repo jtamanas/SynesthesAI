@@ -91,8 +91,9 @@ class App:
             # name = user["display_name"]
             username = user["id"]
 
-            image_col, text_col = st.columns(2)
-
+            placeholder = st.empty()
+            isclick = placeholder.button("delete this button")
+            image_col, text_col = placeholder.columns(2)
             with image_col:
                 uploaded_image = st.file_uploader(
                     "Listen to your picture.",
@@ -106,6 +107,8 @@ class App:
                     height=350,
                 )
 
+            if isclick:
+                placeholder.empty()
             if uploaded_image:
                 prompt = prompts.image.prompt
                 image_handler = ImageHandler(uploaded_image)

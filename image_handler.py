@@ -15,7 +15,8 @@ class ImageHandler:
     def resize_and_convert(self, image):
         im = Image.open(image)
         # drop alpha channel to make jpeg
-        new_image = im.convert("RGB").resize((300, 300))
+        new_image = im.convert("RGB")
+        new_image.thumbnail((300, 300), Image.LANCZOS)
         buffered = BytesIO()
         new_image.save(buffered, format="JPEG")
         return buffered
