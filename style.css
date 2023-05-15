@@ -46,6 +46,7 @@ p {
 /* Title */
 h1 {
     font-size: 3.85em;
+    text-align: center;
     /* font-size: 3cqi; */
     font-family: Helvetica Neue;
 }

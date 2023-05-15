@@ -91,17 +91,21 @@ class App:
             # name = user["display_name"]
             username = user["id"]
 
-            music_request = st.text_area(
-                "Describe your mood.",
-                st.session_state["music_request"],
-                height=200,
-                label_visibility="hidden",
-            )
+            text_col, image_col = st.columns(2)
 
-            uploaded_image = st.file_uploader(
-                "Upload an image to inspire your playlist.",
-                type=["png", "jpg"],
-            )
+            with text_col:
+                music_request = st.text_area(
+                    "Hear your mood.",
+                    st.session_state["music_request"],
+                    height=350,
+                    # label_visibility="hidden",
+                )
+
+            with image_col:
+                uploaded_image = st.file_uploader(
+                    "Listen to your picture.",
+                    type=["png", "jpg"],
+                )
 
             if uploaded_image:
                 prompt = prompts.image.prompt
@@ -134,7 +138,6 @@ class App:
 
 
 if __name__ == "__main__":
-    print(os.environ["REPLICATE_API_KEY"])
     spotify_handler = SpotifyHandler()
     app = App(spotify_handler)
     app.run()
