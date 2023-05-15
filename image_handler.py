@@ -1,8 +1,10 @@
-import replicate
 from typing import BinaryIO
 import base64
 from PIL import Image
 from io import BytesIO
+import os
+import streamlit as st
+import replicate
 
 
 class ImageHandler:
@@ -22,7 +24,8 @@ class ImageHandler:
         # description = "a cartoon snail with a colorful shell on its back, snail, elon musk as slimy mollusk, nacre, art of angrysnail, snail shell, transparent goo, nacre colors, colourful slime, gary, snail in the style of nfl logo, inkscape, it's name is greeny, slimy, cell shaded cartoon, turbo"
 
         print("Ingested image. Generating description...")
-        description = replicate.run(
+        client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
+        description = client.run(
             self.model, input={"image": self.image_file, "mode": "fast"}
         )
         print("Description:", description)

@@ -9,10 +9,6 @@ from utils import dict_to_string
 import os
 
 
-# Set the REPLICATE_API_TOKEN environment variable
-os.environ["REPLICATE_API_KEY"] = st.secrets["REPLICATE_API_KEY"]
-
-
 class App:
     def __init__(
         self,
@@ -138,6 +134,7 @@ class App:
 
 
 if __name__ == "__main__":
+    print(os.environ["REPLICATE_API_KEY"])
     spotify_handler = SpotifyHandler()
     app = App(spotify_handler)
     app.run()
