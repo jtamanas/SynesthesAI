@@ -96,7 +96,7 @@ class App:
             with image_col:
                 uploaded_image = st.file_uploader(
                     "Listen to your picture.",
-                    type=["png", "jpg"],
+                    type=["png", "jpg", "jpeg"],
                 )
 
             with text_col:
