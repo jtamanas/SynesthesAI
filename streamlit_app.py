@@ -25,16 +25,10 @@ class App:
     def display_welcome(self):
         # define welcome
         welcome_msg = """
-        Write a really specific description of your mood. I'll pass that onto Spotify
+        Upload a picture or write a really specific description of your mood. I'll pass that onto Spotify
         to build a playlist just for you.
         """
 
-        # define temporary note
-        note_temp = """
-        
-        
-        _"i want to listen to van goghs starry night 👨‍🎨🌃🌌🖼️"_
-        """
         auth_url = self.spotify_handler.oauth.get_authorize_url()
 
         link_html = '<a target="_blank" href="{url}" >{msg}</a>'.format(
@@ -47,7 +41,6 @@ class App:
 
         if not st.session_state["signed_in"]:
             st.markdown(welcome_msg)
-            st.markdown(note_temp)
             st.markdown(link_html, unsafe_allow_html=True)
 
     def run(self):

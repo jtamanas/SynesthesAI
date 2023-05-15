@@ -12,16 +12,8 @@ class ImageHandler:
         self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
 
-    def resize_and_convert(self, image):
-        im = Image.open(image)
-        # drop alpha channel to make jpeg
-        new_image = im.convert("RGB")
-        new_image.thumbnail((300, 300), Image.LANCZOS)
-        buffered = BytesIO()
-        new_image.save(buffered, format="JPEG")
-        return buffered
-
     def describe(self):
+        """Describe the full image."""
         # description = "a cartoon snail with a colorful shell on its back, snail, elon musk as slimy mollusk, nacre, art of angrysnail, snail shell, transparent goo, nacre colors, colourful slime, gary, snail in the style of nfl logo, inkscape, it's name is greeny, slimy, cell shaded cartoon, turbo"
 
         print("Ingested image. Generating description...")
@@ -31,6 +23,15 @@ class ImageHandler:
         )
         print("Description:", description)
         return description
+
+    def resize_and_convert(self, image):
+        im = Image.open(image)
+        # drop alpha channel to make jpeg
+        new_image = im.convert("RGB")
+        new_image.thumbnail((300, 300), Image.LANCZOS)
+        buffered = BytesIO()
+        new_image.save(buffered, format="JPEG")
+        return buffered
 
     @property
     def image_b64(self):
