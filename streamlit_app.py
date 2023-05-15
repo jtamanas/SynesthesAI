@@ -103,7 +103,7 @@ class App:
                 music_request = st.text_area(
                     "Or hear your mood.",
                     st.session_state["music_request"],
-                    height=200,
+                    height=350,
                 )
 
             if uploaded_image:
