@@ -1,9 +1,14 @@
 :root {
     --black: #0F1117;
-    --blue: #4060c9;
-    --orange: #e34f26;
     --grey: #808183;
+    /* picture */
+    --blue: #4060c9;
+    /* ai */
+    --orange: #e34f26;
+    /* spotify */
     --green: #1DB954;
+    /* mood */
+    --purple: #925878;
 }
 
 a[href] {

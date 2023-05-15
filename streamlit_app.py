@@ -24,23 +24,25 @@ class App:
 
     def display_welcome(self):
         # define welcome
-        welcome_msg = """
-        Upload a picture or write a really specific description of your mood. I'll pass that onto Spotify
-        to build a playlist just for you.
-        """
-
         auth_url = self.spotify_handler.oauth.get_authorize_url()
 
-        link_html = '<a target="_blank" href="{url}" >{msg}</a>'.format(
+        welcome_msg = """
+        Upload a <span style='color:#4060c9'><b>picture</b></span> or write a really specific description of your <span style='color:#925878'><b>mood</b></span>. I'll pass that onto <a target="_blank" href="{url}" >Spotify</a>
+        to build a playlist just for you.
+        """.format(
+            url=auth_url
+        )
+
+        link_html = 'Sign into <a target="_blank" href="{url}" >{msg}</a>.'.format(
             url=auth_url,
-            msg="Sign into Spotify.",
+            msg="Spotify",
             unsafe_allow_html=True,
         )
 
         self.title()
 
         if not st.session_state["signed_in"]:
-            st.markdown(welcome_msg)
+            st.markdown(welcome_msg, unsafe_allow_html=True)
             st.markdown(link_html, unsafe_allow_html=True)
 
     def run(self):
@@ -88,16 +90,26 @@ class App:
             isclick = placeholder.button("delete this button")
             image_col, text_col = placeholder.columns(2)
             with image_col:
+                st.markdown(
+                    "Listen to your <span style='color:#4060c9'><b>picture</b></span>.",
+                    unsafe_allow_html=True,
+                )
                 uploaded_image = st.file_uploader(
-                    "Listen to your picture.",
+                    "Upload an image here.",
                     type=["png", "jpg", "jpeg"],
+                    label_visibility="collapsed",
                 )
 
             with text_col:
+                st.markdown(
+                    "Or hear your <span style='color:#925878'><b>mood</b></span>.",
+                    unsafe_allow_html=True,
+                )
                 music_request = st.text_area(
-                    "Or hear your mood.",
+                    "Type your mood here.",
                     st.session_state["music_request"],
                     height=350,
+                    label_visibility="collapsed",
                 )
 
             if isclick:
