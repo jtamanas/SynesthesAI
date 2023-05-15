@@ -91,20 +91,19 @@ class App:
             # name = user["display_name"]
             username = user["id"]
 
-            text_col, image_col = st.columns(2)
-
-            with text_col:
-                music_request = st.text_area(
-                    "Hear your mood.",
-                    st.session_state["music_request"],
-                    height=350,
-                    # label_visibility="hidden",
-                )
+            image_col, text_col = st.columns(2)
 
             with image_col:
                 uploaded_image = st.file_uploader(
                     "Listen to your picture.",
                     type=["png", "jpg"],
+                )
+
+            with text_col:
+                music_request = st.text_area(
+                    "Or hear your mood.",
+                    st.session_state["music_request"],
+                    height=200,
                 )
 
             if uploaded_image:
