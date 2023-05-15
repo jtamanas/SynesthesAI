@@ -2,27 +2,44 @@ from typing import BinaryIO
 import base64
 from PIL import Image
 from io import BytesIO
-import os
 import streamlit as st
 import replicate
+import openai
+
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 class ImageHandler:
     def __init__(self, image_file: BinaryIO) -> None:
+        self.openai_engine = "text-curie-001"
+        self.summary_prompt = "Rephrase the following description of an image. Be sure to include the emotions evoked by said image"
+        self.openai_temperature = 1.2
         self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
 
+    def get_summary(self, description):
+        response = openai.Completion.create(
+            engine=self.openai_engine,
+            prompt=f"{self.summary_prompt}: '{description}'",
+            temperature=self.openai_temperature,
+            max_tokens=60,
+        )
+        return response.choices[0].text.strip()
+
     def describe(self):
         """Describe the full image."""
-        # description = "a cartoon snail with a colorful shell on its back, snail, elon musk as slimy mollusk, nacre, art of angrysnail, snail shell, transparent goo, nacre colors, colourful slime, gary, snail in the style of nfl logo, inkscape, it's name is greeny, slimy, cell shaded cartoon, turbo"
-
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
-        description = client.run(
+        raw_description = client.run(
             self.model, input={"image": self.image_file, "mode": "fast"}
         )
-        print("Description:", description)
-        return description
+        print("Raw description:", raw_description)
+
+        # Post-process the description using GPT-3
+        processed_description = self.get_summary(raw_description)
+        print("Processed description:", processed_description)
+
+        return processed_description
 
     def resize_and_convert(self, image):
         im = Image.open(image)

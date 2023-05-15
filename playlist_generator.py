@@ -189,7 +189,13 @@ class PlaylistGenerator:
         )
         print("Got playlist parameters")
         range_playlist_query = self.get_playlist_query_with_ranges(raw_playlist_query)
-        track_ids = self.get_track_recommendations(**range_playlist_query)
+
+        # even if there are enough songs in the filter, the vibe of the playlist
+        # tends to wander. By limiting the number of tracks from the initial
+        # query, we can limit the vibe to just the first n songs
+        track_ids = self.get_track_recommendations(**range_playlist_query)[
+            :num_enhanced_tracks_to_add
+        ]
         print(len(track_ids))
         while len(track_ids) < num_tracks:
             print("Enhancing the playlist...")

@@ -27,7 +27,7 @@ class App:
         auth_url = self.spotify_handler.oauth.get_authorize_url()
 
         welcome_msg = """
-        Upload a <span style='color:#4060c9'><b>picture</b></span> or write a really specific description of your <span style='color:#925878'><b>mood</b></span>. I'll pass that onto <a target="_blank" href="{url}" >Spotify</a>
+        Upload a <span style='color:#4060c9'><b>picture</b></span> or write a really specific description of your <span style='color:#8C3680'><b>mood</b></span>. I'll pass that onto <a target="_blank" href="{url}" >Spotify</a>
         to build a playlist just for you.
         """.format(
             url=auth_url
@@ -102,7 +102,7 @@ class App:
 
             with text_col:
                 st.markdown(
-                    "Or hear your <span style='color:#925878'><b>mood</b></span>.",
+                    "Or hear your <span style='color:#8C3680'><b>mood</b></span>.",
                     unsafe_allow_html=True,
                 )
                 music_request = st.text_area(

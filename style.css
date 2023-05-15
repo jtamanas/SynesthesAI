@@ -1,4 +1,5 @@
 :root {
+    --white: #FFFFFF;
     --black: #0F1117;
     --grey: #808183;
     /* picture */
@@ -8,7 +9,8 @@
     /* spotify */
     --green: #1DB954;
     /* mood */
-    --purple: #925878;
+    --purple: #861388;
+    /* --purple: #925878; */
 }
 
 a[href] {
@@ -52,6 +54,6 @@ p {
 h1 {
     font-size: 3.85em;
     text-align: center;
-    /* font-size: 3cqi; */
+    /* font-size: 12.5cqw; */
     font-family: Helvetica Neue;
 }
