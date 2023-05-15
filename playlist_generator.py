@@ -155,7 +155,6 @@ class PlaylistGenerator:
 
     def set_playlist_cover_image(self, playlist_id, image_b64):
         try:
-            print("IMAGE BYECODE", image_b64)
             self.spotify_handler.spotify.playlist_upload_cover_image(
                 playlist_id, image_b64
             )

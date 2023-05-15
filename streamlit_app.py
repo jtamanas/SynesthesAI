@@ -6,6 +6,11 @@ import prompts.mood
 import prompts.image
 from css import css
 from utils import dict_to_string
+import os
+
+
+# Set the REPLICATE_API_TOKEN environment variable
+os.environ["REPLICATE_API_KEY"] = st.secrets["REPLICATE_API_KEY"]
 
 
 class App:
