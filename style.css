@@ -53,7 +53,7 @@ p {
 /* Title */
 h1 {
     font-size: 3.85em;
-    text-align: center;
+    /* text-align: center; */
     /* font-size: 12.5cqw; */
     font-family: Helvetica Neue;
 }

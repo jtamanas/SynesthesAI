@@ -19,7 +19,8 @@ class App:
 
     def title(self):
         st.markdown(
-            "# Synesthes<span style='color:#ff6319'>ai</span>", unsafe_allow_html=True
+            "# Synesthes<span style='color:#ff6319'>ai</span>\n---",
+            unsafe_allow_html=True,
         )
 
     def display_welcome(self):
@@ -87,37 +88,36 @@ class App:
             username = user["id"]
 
             placeholder = st.empty()
-            isclick = placeholder.button("delete this button")
-            image_col, text_col = placeholder.columns(2)
-            with image_col:
-                st.markdown(
-                    "Listen to your <span style='color:#4060c9'><b>picture</b></span>.",
-                    unsafe_allow_html=True,
-                )
-                uploaded_image = st.file_uploader(
-                    "Upload an image here.",
-                    type=["png", "jpg", "jpeg"],
-                    label_visibility="collapsed",
-                )
+            with placeholder.container():
+                image_col, text_col = st.columns(2)
+                with image_col:
+                    st.markdown(
+                        "Listen to your <span style='color:#4060c9'><b>picture</b></span>.",
+                        unsafe_allow_html=True,
+                    )
+                    uploaded_image = st.file_uploader(
+                        "Upload an image here.",
+                        type=["png", "jpg", "jpeg", "webp"],
+                        label_visibility="collapsed",
+                    )
 
-            with text_col:
-                st.markdown(
-                    "Or hear your <span style='color:#8C3680'><b>mood</b></span>.",
-                    unsafe_allow_html=True,
-                )
-                music_request = st.text_area(
-                    "Type your mood here.",
-                    st.session_state["music_request"],
-                    height=350,
-                    label_visibility="collapsed",
-                )
+                with text_col:
+                    st.markdown(
+                        "Or hear your <span style='color:#8C3680'><b>mood</b></span>.",
+                        unsafe_allow_html=True,
+                    )
+                    music_request = st.text_area(
+                        "Type your mood here.",
+                        st.session_state["music_request"],
+                        height=350,
+                        label_visibility="collapsed",
+                    )
 
-            if isclick:
-                placeholder.empty()
             if uploaded_image:
                 prompt = prompts.image.prompt
                 image_handler = ImageHandler(uploaded_image)
                 with st.spinner("describing your image..."):
+                    placeholder.empty()
                     music_request = image_handler.describe()
             else:
                 prompt = prompts.mood.prompt
@@ -125,6 +125,7 @@ class App:
             if music_request and music_request != st.session_state["music_request"]:
                 if len(music_request) > 2:
                     with st.spinner("making your playlist..."):
+                        placeholder.empty()
                         (
                             playlist_data,
                             playlist_id,
@@ -132,7 +133,7 @@ class App:
                             username=username,
                             prompt=prompt,
                             music_request=music_request,
-                            debug=False,
+                            debug=True,
                         )
 
                         if uploaded_image:
@@ -142,6 +143,11 @@ class App:
 
                         st.session_state["music_request"] = music_request
                         st.text(dict_to_string(playlist_data))
+
+                        # Restart button
+                        if st.button("make another"):
+                            st.caching.clear_cache()
+                            st.experimental_rerun()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from spotify_handler import SpotifyHandler
+from constants import DEFAULT_SEARCH_PARAMETERS
 from prompts.constants import beginning_of_json
 from available_genres import recommendation_genres
 import json
@@ -34,6 +34,7 @@ class PlaylistGenerator:
     "danceability": {"min": 0, "max": 0.3},
     "valence": {"min": 0.6, "max": 0.9},
     "acousticness": {"min": 0.7, "max": 1},
+    "year": 1988,
     "artists": ["Ludovico Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
     }"""
         else:

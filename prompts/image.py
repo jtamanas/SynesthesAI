@@ -1,5 +1,4 @@
 from available_genres import list_of_recommendation_genres
-from .constants import beginning_of_json
 
 
 audio_features = """For each of the attributes below (except mode), you MUST provide a min and max if you specify it. 
@@ -19,7 +18,7 @@ Audio Features (Format: variable_name (range)):
 
 prompt = """Here are the audio features available in the spotify api: {audio_features}
 
-I have an image that I'll describe as `{{music_request}}`. I want a spotify playlist inspired by that image. The description has some names in it, but don't get confused, those are just the names of famous people and visual artists to help illuminate the style of the image. Honestly the first part of the description is probably the most useful.
+I have an image that I'll describe as `{{music_request}}`. I want a spotify playlist inspired by that image. The description has some names in it, but don't get confused, those are just the names of famous people and visual artists to help illuminate the style of the image.
 
 Using this information, I want you to make a JSON that contains appropriate values for the attributes listed. Not every attribute needs to be listed, just the ones that you think are important to specify. This JSON will be passed to spotify to make a playlist. Be sure to include a six word summary of my mood as the name of the playlist -- be sure to match the tone of my reply. The final JSON should look like `{{beginning_of_json}} [...], "playlist_name": ..., "energy": {{{{"min": ..., "max": ...}}}}, ...`
 

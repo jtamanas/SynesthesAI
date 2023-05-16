@@ -15,13 +15,14 @@ engines = [
     "text-davinci-003",
     "text-davinci-002",
     "text-curie-001",
-    "text-babbage-001",
-    "text-ada-001",
+    # "text-babbage-001",
+    # "text-ada-001",
 ]
 prompts = [
-    "Summarize the following description focusing on tone and emotion",
+    # "Summarize the following description focusing on tone and emotion",
     # "Give a brief summary of the following artistic description",
     "Rephrase the following description of an image. Be sure to include the emotions evoked by said image",
+    "Rewrite this description of an image. Focus on the feelings and emotions evoked",
 ]
 temperatures = [0.5, 0.7, 1.0, 1.2]
 
@@ -72,3 +73,7 @@ pp.close()
 # My fav for starry night is text-davinci-003 with temp=0.5
 # My fav for the cartoon snail is text-curie-001 with temp=1.2
 # This also performed well on starry night, so I'm going to try it out
+
+
+# Davinci does quite well with  "Rewrite this description of an image. Focus on the feelings and emotions evoked"
+# I'm going to try this out with temp=0.9

@@ -1,5 +1,4 @@
 from available_genres import list_of_recommendation_genres
-from .constants import beginning_of_json
 
 
 audio_features = """For each of the attributes below (except mode), you MUST provide a min and max if you specify it. 
