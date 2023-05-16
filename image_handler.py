@@ -12,7 +12,7 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 class ImageHandler:
     def __init__(self, image_file: BinaryIO) -> None:
         self.openai_engine = "text-davinci-003"
-        self.summary_prompt = "Rewrite this description of an image. Focus on specific feelings and emotions evoked"
+        self.summary_prompt = "Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres"
         self.openai_temperature = 0.9
         self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
