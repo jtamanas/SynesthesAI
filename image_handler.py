@@ -12,7 +12,7 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 class ImageHandler:
     def __init__(self, image_file: BinaryIO) -> None:
         self.openai_engine = "text-davinci-003"
-        self.summary_prompt = "Rephrase the following description of an image. Be sure to include the feelings and emotions evoked by said image"
+        self.summary_prompt = "Rewrite this description of an image. Focus on specific feelings and emotions evoked"
         self.openai_temperature = 0.9
         self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
@@ -42,9 +42,9 @@ class ImageHandler:
         return processed_description
 
     def resize_and_convert(self, image, small=False):
-        dimensions = 512
+        dimensions = 768
         if small:
-            dimensions = 300
+            dimensions = 500
 
         im = Image.open(image)
         w, h = im.size
@@ -57,6 +57,7 @@ class ImageHandler:
         new_image.thumbnail(dimensions, Image.Resampling.LANCZOS)
         buffered = BytesIO()
         new_image.save(buffered, format="JPEG")
+        print(f"THUMBNAIL SIZE: {buffered.tell()}")
         return buffered
 
     @property

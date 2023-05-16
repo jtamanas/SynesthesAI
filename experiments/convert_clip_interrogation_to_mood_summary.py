@@ -22,7 +22,7 @@ prompts = [
     # "Summarize the following description focusing on tone and emotion",
     # "Give a brief summary of the following artistic description",
     "Rephrase the following description of an image. Be sure to include the emotions evoked by said image",
-    "Rewrite this description of an image. Focus on the feelings and emotions evoked",
+    "Rewrite this description of an image. Focus on specific feelings and emotions evoked",
 ]
 temperatures = [0.5, 0.7, 1.0, 1.2]
 
