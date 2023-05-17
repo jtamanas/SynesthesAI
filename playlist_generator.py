@@ -1,9 +1,9 @@
 import streamlit as st
 import openai
 from constants import DEFAULT_SEARCH_PARAMETERS
-from prompts.constants import beginning_of_json
+from prompts.constants import beginning_of_yaml
 from available_genres import recommendation_genres
-import json
+import yaml
 import random
 
 
@@ -36,15 +36,32 @@ class PlaylistGenerator:
     def get_recommendation_parameters(self, prompt, debug=True):
         try:
             if debug:
-                generated_json = """{"genres":["classical", "ambient"],
-        "playlist_name": "[TEST] Starry Night Vibes",
-        "energy": {"min": 0, "max": 0.3},
-        "danceability": {"min": 0, "max": 0.3},
-        "valence": {"min": 0.6, "max": 0.9},
-        "acousticness": {"min": 0.7, "max": 1},
-        "year": {"min": 1988, "max": 2002},
-        "artists": ["Ludovico Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
-        }"""
+                generated_yaml = """
+genres:
+  - classical
+  - ambient
+playlist_name: '[TEST] Starry Night Vibes'
+energy:
+  min: 0
+  max: 0.3
+danceability:
+  min: 0
+  max: 0.3
+valence:
+  min: 0.6
+  max: 0.9
+acousticness:
+  min: 0.7
+  max: 1
+year:
+  min: 1988
+  max: 2002
+artists:
+  - Ludovico Einaudi
+  - Nujabes
+  - Gustavo Santaolalla
+  - Hans Zimmer
+                """
             else:
                 # Send the prompt to the OpenAI API
                 response = openai.Completion.create(
@@ -55,21 +72,19 @@ class PlaylistGenerator:
                     stop=None,
                     temperature=1.0,
                 )
-                # Extract the generated JSON from the response
-                generated_json = beginning_of_json + response.choices[0].text.strip()
-                print(generated_json)
+                # Extract the generated YAML from the response
+                generated_yaml = response.choices[0].text.strip()
+                generated_yaml = beginning_of_yaml + generated_yaml
+                print(generated_yaml)
 
             try:
-                playlist_data = json.loads(generated_json)
+                playlist_data = yaml.safe_load(generated_yaml)
                 playlist_data = self.merge_with_default_parameters(
                     playlist_data
                 )  # merge with default parameters
 
-            except json.JSONDecodeError:
-                print(f"Failed to parse JSON: {generated_json}")
-                raise
             except Exception as e:
-                print(f"Unexpected error when parsing JSON: {e}")
+                print(f"Unexpected error when parsing YAML: {e}")
                 raise
 
             playlist_data["seed_genres"] = self.filter_genres(playlist_data["genres"])
@@ -224,7 +239,7 @@ class PlaylistGenerator:
     ):
         music_request = music_request or ""
         formatted_prompt = prompt.format(
-            beginning_of_json=beginning_of_json, music_request=music_request
+            beginning_of_yaml=beginning_of_yaml, music_request=music_request
         )
         raw_playlist_query = self.get_recommendation_parameters(
             formatted_prompt, debug=debug

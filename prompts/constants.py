@@ -1,1 +1,1 @@
-beginning_of_json = """{"genres":"""
+beginning_of_yaml = """genres:\n  - """

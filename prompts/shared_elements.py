@@ -12,5 +12,5 @@ Audio Features (Format: variable_name (range)):
 9. tempo (int): Estimated tempo in BPM.
 10. valence (0-1): Musical positiveness.
 11. popularity (0-100): Current popularity. >70 is radio-worthy.
-12. year (0-2050): Year of release. Be liberal in your ranges, unless specific periods are specified.
+12. year (0-2023): Year of release. Be liberal in your ranges, unless specific periods are specified. It's currently 2023
 ```"""
