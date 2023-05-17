@@ -134,7 +134,7 @@ class PlaylistGenerator:
             pieces.append(result[f"{search_type}s"]["items"][0]["id"])
         return pieces
 
-    def filter_tracks_by_category(self, tracks, category, category_range):
+    def filter_tracks_by_category(self, tracks, category_range):
         filtered_tracks = []
         for track in tracks:
             year = int(track["album"]["release_date"].split("-")[0])
@@ -148,7 +148,6 @@ class PlaylistGenerator:
         # filter by year, ensuring only relevant tracks are added
         tracks = self.filter_tracks_by_category(
             tracks,
-            category="year",
             category_range=kwargs["year"],
         )
         track_names = [
