@@ -26,7 +26,7 @@ class ImageHandler:
         )
         return response.choices[0].text.strip()
 
-    def describe(self, postprocess=False):
+    def describe(self, postprocess=True):
         """Describe the full image."""
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
