@@ -17,3 +17,13 @@ def dict_to_string(d):
             value_str = str(value)
         lines.append(f"{key}: {value_str}")
     return "\n".join(lines)
+
+
+def deep_merge_dicts(dict1, dict2):
+    merged = dict1.copy()
+    for key, value in dict2.items():
+        if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+            merged[key] = deep_merge_dicts(dict1[key], value)
+        else:
+            merged[key] = value
+    return merged

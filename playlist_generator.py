@@ -5,18 +5,17 @@ from prompts.constants import beginning_of_yaml
 from available_genres import recommendation_genres
 import yaml
 import random
+from utils import deep_merge_dicts
+
+
+# these are attributes that are not meant to be treated like the others
+# re: making min, max, and target arguments
+SPECIAL_ATTRIBUTES = ["year"]
 
 
 class PlaylistGenerator:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
-
-    def merge_with_default_parameters(self, playlist_data):
-        # Make a copy of the default parameters
-        merged_data = DEFAULT_SEARCH_PARAMETERS.copy()
-        # Update the default parameters with the playlist data
-        merged_data.update(playlist_data)
-        return merged_data
 
     # your methods like get_recommendation_parameters, filter_genres, get_track_recommendations etc.
     def range_min_max_to_target(self, min_max_dict):
@@ -27,7 +26,7 @@ class PlaylistGenerator:
         """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
         new_query_dict = {}
         for key, val in query_dict.items():
-            if isinstance(val, dict) and key != "year":
+            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
                 new_query_dict[key] = self.range_min_max_to_target(val)
             else:
                 new_query_dict[key] = val
@@ -79,8 +78,8 @@ artists:
 
             try:
                 playlist_data = yaml.safe_load(generated_yaml)
-                playlist_data = self.merge_with_default_parameters(
-                    playlist_data
+                playlist_data = deep_merge_dicts(
+                    DEFAULT_SEARCH_PARAMETERS, playlist_data
                 )  # merge with default parameters
 
             except Exception as e:
@@ -116,7 +115,7 @@ artists:
     def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
         new_search_dict = {}
         for key, val in spotify_search_dict.items():
-            if isinstance(val, dict) and key != "year":
+            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
                 for range_key, range_val in val.items():
                     new_search_dict[f"{range_key}_{key}"] = range_val
             else:
@@ -157,7 +156,6 @@ artists:
                 filtered_tracks.append(track)
         return filtered_tracks
 
-    def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
     def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
         """I pull out genres from kwargs to ensure it doesnt mess up the search"""
         tracks = self.spotify_handler.spotify.recommendations(limit=limit, **kwargs)[
@@ -253,7 +251,7 @@ artists:
         track_ids = self.get_track_recommendations(
             limit=num_enhanced_tracks_to_add, **range_playlist_query
         )
-        print("Number of tracks: "len(track_ids))
+        print("Number of tracks: ", len(track_ids))
         while len(track_ids) < num_tracks:
             print("Enhancing the playlist...")
             target_range_query = self.get_playlist_query_with_targets(
@@ -274,7 +272,7 @@ artists:
             )
             track_ids.extend(new_track_ids)
             track_ids = list(set(track_ids))
-            print("Number of tracks: "len(track_ids))
+            print("Number of tracks: ", len(track_ids))
         print("Got track ids")
 
         if "playlist_name" in raw_playlist_query:
