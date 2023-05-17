@@ -11,4 +11,5 @@ DEFAULT_SEARCH_PARAMETERS = {
     "valence": {"min": 40, "max": 250},
     "popularity": {"min": 0, "max": 100},
     "year": {"min": 0, "max": 3000},
+    "mode": {"min": 0, "max": 1},
 }

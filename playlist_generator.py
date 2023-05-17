@@ -1,22 +1,21 @@
 import streamlit as st
 import openai
 from constants import DEFAULT_SEARCH_PARAMETERS
-from prompts.constants import beginning_of_json
+from prompts.constants import beginning_of_yaml
 from available_genres import recommendation_genres
-import json
+import yaml
 import random
+from utils import deep_merge_dicts
+
+
+# these are attributes that are not meant to be treated like the others
+# re: making min, max, and target arguments
+SPECIAL_ATTRIBUTES = ["year"]
 
 
 class PlaylistGenerator:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
-
-    def merge_with_default_parameters(self, playlist_data):
-        # Make a copy of the default parameters
-        merged_data = DEFAULT_SEARCH_PARAMETERS.copy()
-        # Update the default parameters with the playlist data
-        merged_data.update(playlist_data)
-        return merged_data
 
     # your methods like get_recommendation_parameters, filter_genres, get_track_recommendations etc.
     def range_min_max_to_target(self, min_max_dict):
@@ -27,7 +26,7 @@ class PlaylistGenerator:
         """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
         new_query_dict = {}
         for key, val in query_dict.items():
-            if isinstance(val, dict) and key != "year":
+            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
                 new_query_dict[key] = self.range_min_max_to_target(val)
             else:
                 new_query_dict[key] = val
@@ -36,15 +35,32 @@ class PlaylistGenerator:
     def get_recommendation_parameters(self, prompt, debug=True):
         try:
             if debug:
-                generated_json = """{"genres":["classical", "ambient"],
-        "playlist_name": "[TEST] Starry Night Vibes",
-        "energy": {"min": 0, "max": 0.3},
-        "danceability": {"min": 0, "max": 0.3},
-        "valence": {"min": 0.6, "max": 0.9},
-        "acousticness": {"min": 0.7, "max": 1},
-        "year": {"min": 1988, "max": 2002},
-        "artists": ["Ludovico Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
-        }"""
+                generated_yaml = """
+genres:
+  - classical
+  - ambient
+playlist_name: '[TEST] Starry Night Vibes'
+energy:
+  min: 0
+  max: 0.3
+danceability:
+  min: 0
+  max: 0.3
+valence:
+  min: 0.6
+  max: 0.9
+acousticness:
+  min: 0.7
+  max: 1
+year:
+  min: 1988
+  max: 2002
+artists:
+  - Ludovico Einaudi
+  - Nujabes
+  - Gustavo Santaolalla
+  - Hans Zimmer
+                """
             else:
                 # Send the prompt to the OpenAI API
                 response = openai.Completion.create(
@@ -55,21 +71,19 @@ class PlaylistGenerator:
                     stop=None,
                     temperature=1.0,
                 )
-                # Extract the generated JSON from the response
-                generated_json = beginning_of_json + response.choices[0].text.strip()
-                print(generated_json)
+                # Extract the generated YAML from the response
+                generated_yaml = response.choices[0].text.strip()
+                generated_yaml = beginning_of_yaml + generated_yaml
+                print(generated_yaml)
 
             try:
-                playlist_data = json.loads(generated_json)
-                playlist_data = self.merge_with_default_parameters(
-                    playlist_data
+                playlist_data = yaml.safe_load(generated_yaml)
+                playlist_data = deep_merge_dicts(
+                    DEFAULT_SEARCH_PARAMETERS, playlist_data
                 )  # merge with default parameters
 
-            except json.JSONDecodeError:
-                print(f"Failed to parse JSON: {generated_json}")
-                raise
             except Exception as e:
-                print(f"Unexpected error when parsing JSON: {e}")
+                print(f"Unexpected error when parsing YAML: {e}")
                 raise
 
             playlist_data["seed_genres"] = self.filter_genres(playlist_data["genres"])
@@ -101,7 +115,7 @@ class PlaylistGenerator:
     def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
         new_search_dict = {}
         for key, val in spotify_search_dict.items():
-            if isinstance(val, dict) and key != "year":
+            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
                 for range_key, range_val in val.items():
                     new_search_dict[f"{range_key}_{key}"] = range_val
             else:
@@ -144,6 +158,9 @@ class PlaylistGenerator:
 
     def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
         """I pull out genres from kwargs to ensure it doesnt mess up the search"""
+        tracks = self.spotify_handler.spotify.recommendations(limit=limit, **kwargs)[
+            "tracks"
+        ]
         tracks = self.spotify_handler.spotify.recommendations(limit=limit, **kwargs)[
             "tracks"
         ]
@@ -220,7 +237,7 @@ class PlaylistGenerator:
     ):
         music_request = music_request or ""
         formatted_prompt = prompt.format(
-            beginning_of_json=beginning_of_json, music_request=music_request
+            beginning_of_yaml=beginning_of_yaml, music_request=music_request
         )
         raw_playlist_query = self.get_recommendation_parameters(
             formatted_prompt, debug=debug
@@ -246,6 +263,10 @@ class PlaylistGenerator:
                     target_range_query, track_ids
                 )
             print(target_range_query)
+            new_track_ids = self.get_track_recommendations(
+                limit=num_enhanced_tracks_to_add, **target_range_query
+            )
+            track_ids.extend(new_track_ids)
             new_track_ids = self.get_track_recommendations(
                 limit=num_enhanced_tracks_to_add, **target_range_query
             )
