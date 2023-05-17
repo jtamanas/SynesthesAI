@@ -26,20 +26,21 @@ class ImageHandler:
         )
         return response.choices[0].text.strip()
 
-    def describe(self):
+    def describe(self, postprocess=False):
         """Describe the full image."""
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
-        raw_description = client.run(
+        description = client.run(
             self.model, input={"image": self.image_file, "mode": "fast"}
         )
-        print("Raw description:", raw_description)
+        print("Raw description:", description)
 
-        # Post-process the description using GPT-3
-        processed_description = self.get_summary(raw_description)
-        print("Processed description:", processed_description)
+        if postprocess:
+            # Post-process the description using GPT-3
+            description = self.get_summary(description)
+            print("Processed description:", description)
 
-        return processed_description
+        return description
 
     def resize_and_convert(self, image, small=False):
         dimensions = 768

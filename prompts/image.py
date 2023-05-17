@@ -1,20 +1,6 @@
 from available_genres import list_of_recommendation_genres
+from .shared_elements import audio_features
 
-
-audio_features = """For each of the attributes below (except mode), you MUST provide a min and max if you specify it. 
-```
-Audio Features (Format: variable_name (range)): 
-1. acousticness (0-1): Confidence in the track being acoustic. Higher values indicate higher confidence.
-2. danceability (0-1): Suitability for dancing.
-3. energy (0-1): Intensity and activity measure.
-4. instrumentalness (0-1): Predicts absence of vocals.
-5. key (int): Track's key using Pitch Class notation.
-6. liveness (0-1): Presence of an audience.
-7. loudness (float): Overall loudness.
-8. speechiness (0-1): Presence of spoken words.
-9. tempo (int): Estimated tempo in BPM.
-10. valence (0-1): Musical positiveness.
-```"""
 
 prompt = """Here are the audio features available in the spotify api: {audio_features}
 

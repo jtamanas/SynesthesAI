@@ -11,6 +11,13 @@ class PlaylistGenerator:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
 
+    def merge_with_default_parameters(self, playlist_data):
+        # Make a copy of the default parameters
+        merged_data = DEFAULT_SEARCH_PARAMETERS.copy()
+        # Update the default parameters with the playlist data
+        merged_data.update(playlist_data)
+        return merged_data
+
     # your methods like get_recommendation_parameters, filter_genres, get_track_recommendations etc.
     def range_min_max_to_target(self, min_max_dict):
         """Takes in a dictionary with min,max keys. Returns a dictionary with target keys where target=mean(min, max)"""
@@ -20,71 +27,85 @@ class PlaylistGenerator:
         """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
         new_query_dict = {}
         for key, val in query_dict.items():
-            if isinstance(val, dict):
+            if isinstance(val, dict) and key != "year":
                 new_query_dict[key] = self.range_min_max_to_target(val)
             else:
                 new_query_dict[key] = val
         return new_query_dict
 
     def get_recommendation_parameters(self, prompt, debug=True):
-        if debug:
-            generated_json = """{"genres":["classical", "ambient"],
-    "playlist_name": "[TEST] Starry Night Vibes",
-    "energy": {"min": 0, "max": 0.3},
-    "danceability": {"min": 0, "max": 0.3},
-    "valence": {"min": 0.6, "max": 0.9},
-    "acousticness": {"min": 0.7, "max": 1},
-    "year": 1988,
-    "artists": ["Ludovico Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
-    }"""
-        else:
-            # Send the prompt to the OpenAI API
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=prompt,
-                max_tokens=300,
-                n=1,
-                stop=None,
-                temperature=1.0,
-            )
-            # Extract the generated JSON from the response
-            generated_json = beginning_of_json + response.choices[0].text.strip()
-            print(generated_json)
         try:
-            playlist_data = json.loads(generated_json)
+            if debug:
+                generated_json = """{"genres":["classical", "ambient"],
+        "playlist_name": "[TEST] Starry Night Vibes",
+        "energy": {"min": 0, "max": 0.3},
+        "danceability": {"min": 0, "max": 0.3},
+        "valence": {"min": 0.6, "max": 0.9},
+        "acousticness": {"min": 0.7, "max": 1},
+        "year": {"min": 1988, "max": 2002},
+        "artists": ["Ludovico Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
+        }"""
+            else:
+                # Send the prompt to the OpenAI API
+                response = openai.Completion.create(
+                    engine="text-davinci-003",
+                    prompt=prompt,
+                    max_tokens=300,
+                    n=1,
+                    stop=None,
+                    temperature=1.0,
+                )
+                # Extract the generated JSON from the response
+                generated_json = beginning_of_json + response.choices[0].text.strip()
+                print(generated_json)
+
+            try:
+                playlist_data = json.loads(generated_json)
+                playlist_data = self.merge_with_default_parameters(
+                    playlist_data
+                )  # merge with default parameters
+
+            except json.JSONDecodeError:
+                print(f"Failed to parse JSON: {generated_json}")
+                raise
+            except Exception as e:
+                print(f"Unexpected error when parsing JSON: {e}")
+                raise
 
             playlist_data["seed_genres"] = self.filter_genres(playlist_data["genres"])
 
             if "artists" in playlist_data:
                 playlist_data["seed_artists"] = self.get_ids_from_search(
-                    playlist_data["artists"], search_type="artist"
+                    names=playlist_data["artists"],
+                    years=playlist_data["year"],
+                    search_type="artist",
                 )
                 if len(playlist_data["seed_artists"]) > 1:
                     playlist_data["seed_genres"] = playlist_data["seed_genres"][:1]
 
             if "tracks" in playlist_data:
                 playlist_data["seed_tracks"] = self.get_ids_from_search(
-                    playlist_data["tracks"], search_type="track"
+                    names=playlist_data["tracks"],
+                    years=playlist_data["year"],
+                    search_type="track",
                 )
                 if len(playlist_data["seed_tracks"]) > 1:
                     playlist_data["seed_artists"] = playlist_data["seed_artists"][:1]
 
-        except json.decoder.JSONDecodeError:
-            print(generated_json)
-            print("FAILED TO GENERATE VALID JSON")
-
-        print()
+        except Exception as e:
+            print(f"Unexpected error in get_recommendation_parameters: {e}")
+            raise
 
         return playlist_data
 
     def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
         new_search_dict = {}
-        for k, v in spotify_search_dict.items():
-            if isinstance(v, dict):
-                for range_key, range_val in v.items():
-                    new_search_dict[f"{range_key}_{k}"] = range_val
+        for key, val in spotify_search_dict.items():
+            if isinstance(val, dict) and key != "year":
+                for range_key, range_val in val.items():
+                    new_search_dict[f"{range_key}_{key}"] = range_val
             else:
-                new_search_dict[k] = spotify_search_dict[k]
+                new_search_dict[key] = spotify_search_dict[key]
         return new_search_dict
 
     def filter_genres(self, genre_names):
@@ -101,20 +122,35 @@ class PlaylistGenerator:
         uri = f"spotify:artist:{artist_id}"
         return self.spotify_handler.spotify.artist(uri)
 
-    def get_ids_from_search(self, names, search_type="artist"):
+    def get_ids_from_search(self, names, years, search_type="artist"):
         """search_type can be artist or tracks currently"""
         print("getting artists ids")
         pieces = []
         for name in names:
             print(name)
             result = self.spotify_handler.spotify.search(
-                name, type=search_type, limit=10
+                f"name year:{years['min']}-{years['max']}", type=search_type, limit=1
             )
             pieces.append(result[f"{search_type}s"]["items"][0]["id"])
         return pieces
 
+    def filter_tracks_by_category(self, tracks, category, category_range):
+        filtered_tracks = []
+        for track in tracks:
+            year = int(track["album"]["release_date"].split("-")[0])
+            if category_range["min"] <= year <= category_range["max"]:
+                filtered_tracks.append(track)
+        return filtered_tracks
+
     def get_track_recommendations(self, genres=[""], **kwargs):
+        """I pull out genres from kwargs to ensure it doesnt mess up the search"""
         tracks = self.spotify_handler.spotify.recommendations(**kwargs)["tracks"]
+        # filter by year, ensuring only relevant tracks are added
+        tracks = self.filter_tracks_by_category(
+            tracks,
+            category="year",
+            category_range=kwargs["year"],
+        )
         track_names = [
             f'{track["name"]} - {track["artists"][0]["name"]}' for track in tracks
         ]

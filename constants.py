@@ -8,5 +8,7 @@ DEFAULT_SEARCH_PARAMETERS = {
     "loudness": {"min": -60, "max": 0},
     "speechiness": {"min": 0, "max": 1},
     "tempo": {"min": 40, "max": 250},
-    "valence": {"min": 0, "max": 1},
+    "valence": {"min": 40, "max": 250},
+    "popularity": {"min": 0, "max": 100},
+    "year": {"min": 0, "max": 3000},
 }
