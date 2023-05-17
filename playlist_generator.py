@@ -142,9 +142,11 @@ class PlaylistGenerator:
                 filtered_tracks.append(track)
         return filtered_tracks
 
-    def get_track_recommendations(self, genres=[""], **kwargs):
+    def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
         """I pull out genres from kwargs to ensure it doesnt mess up the search"""
-        tracks = self.spotify_handler.spotify.recommendations(**kwargs)["tracks"]
+        tracks = self.spotify_handler.spotify.recommendations(limit=limit, **kwargs)[
+            "tracks"
+        ]
         # filter by year, ensuring only relevant tracks are added
         tracks = self.filter_tracks_by_category(
             tracks,
@@ -229,10 +231,10 @@ class PlaylistGenerator:
         # even if there are enough songs in the filter, the vibe of the playlist
         # tends to wander. By limiting the number of tracks from the initial
         # query, we can limit the vibe to just the first n songs
-        track_ids = self.get_track_recommendations(**range_playlist_query)[
-            :num_enhanced_tracks_to_add
-        ]
-        print(len(track_ids))
+        track_ids = self.get_track_recommendations(
+            limit=num_enhanced_tracks_to_add, **range_playlist_query
+        )
+        print("Number of tracks: ", len(track_ids))
         while len(track_ids) < num_tracks:
             print("Enhancing the playlist...")
             target_range_query = self.get_playlist_query_with_targets(
@@ -244,10 +246,12 @@ class PlaylistGenerator:
                     target_range_query, track_ids
                 )
             print(target_range_query)
-            new_track_ids = self.get_track_recommendations(**target_range_query)
-            track_ids.extend(new_track_ids[:num_enhanced_tracks_to_add])
+            new_track_ids = self.get_track_recommendations(
+                limit=num_enhanced_tracks_to_add, **target_range_query
+            )
+            track_ids.extend(new_track_ids)
             track_ids = list(set(track_ids))
-            print(len(track_ids))
+            print("Number of tracks: ", len(track_ids))
         print("Got track ids")
 
         if "playlist_name" in raw_playlist_query:
