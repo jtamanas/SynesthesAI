@@ -57,7 +57,7 @@ class ImageHandler:
         new_image = im.convert("RGB")
         new_image.thumbnail(dimensions, Image.Resampling.LANCZOS)
         buffered = BytesIO()
-        new_image.save(buffered, format="JPEG", quality=90)
+        new_image.save(buffered, format="JPEG", quality=85)
         print(f"THUMBNAIL SIZE: {buffered.tell()}")
         return buffered
 
