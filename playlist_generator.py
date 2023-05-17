@@ -143,7 +143,11 @@ class PlaylistGenerator:
         return filtered_tracks
 
     def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
+    def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
         """I pull out genres from kwargs to ensure it doesnt mess up the search"""
+        tracks = self.spotify_handler.spotify.recommendations(limit=limit, **kwargs)[
+            "tracks"
+        ]
         tracks = self.spotify_handler.spotify.recommendations(limit=limit, **kwargs)[
             "tracks"
         ]
@@ -234,7 +238,7 @@ class PlaylistGenerator:
         track_ids = self.get_track_recommendations(
             limit=num_enhanced_tracks_to_add, **range_playlist_query
         )
-        print("Number of tracks: ", len(track_ids))
+        print("Number of tracks: "len(track_ids))
         while len(track_ids) < num_tracks:
             print("Enhancing the playlist...")
             target_range_query = self.get_playlist_query_with_targets(
@@ -250,8 +254,12 @@ class PlaylistGenerator:
                 limit=num_enhanced_tracks_to_add, **target_range_query
             )
             track_ids.extend(new_track_ids)
+            new_track_ids = self.get_track_recommendations(
+                limit=num_enhanced_tracks_to_add, **target_range_query
+            )
+            track_ids.extend(new_track_ids)
             track_ids = list(set(track_ids))
-            print("Number of tracks: ", len(track_ids))
+            print("Number of tracks: "len(track_ids))
         print("Got track ids")
 
         if "playlist_name" in raw_playlist_query:
