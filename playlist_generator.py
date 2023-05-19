@@ -143,7 +143,7 @@ artists:
         for name in names:
             print(name)
             result = self.spotify_handler.spotify.search(
-                f"name year:{years['min']}-{years['max']}", type=search_type, limit=1
+                f"{name} year:{years['min']}-{years['max']}", type=search_type, limit=1
             )
             print(
                 f"Searched for {name}, found: {result[f'{search_type}s']['items'][0]['name']}"
