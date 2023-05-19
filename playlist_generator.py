@@ -1,8 +1,8 @@
 import streamlit as st
 import openai
 from constants import DEFAULT_SEARCH_PARAMETERS
-from prompts.constants import beginning_of_yaml
-from available_genres import recommendation_genres
+from prompts.shared_elements import beginning_of_yaml
+from constants import recommendation_genres
 import yaml
 import random
 from utils import deep_merge_dicts
@@ -138,12 +138,15 @@ artists:
 
     def get_ids_from_search(self, names, years, search_type="artist"):
         """search_type can be artist or tracks currently"""
-        print("getting artists ids")
+        print(f"getting {search_type} ids")
         pieces = []
         for name in names:
             print(name)
             result = self.spotify_handler.spotify.search(
                 f"name year:{years['min']}-{years['max']}", type=search_type, limit=1
+            )
+            print(
+                f"Searched for {name}, found: {result[f'{search_type}s']['items'][0]['name']}"
             )
             pieces.append(result[f"{search_type}s"]["items"][0]["id"])
         return pieces
@@ -175,7 +178,8 @@ artists:
         track_ids = [track["id"] for track in tracks]
         track_ids = list(set(track_ids))
         print("\n".join(track_names))
-        return track_ids
+        # sometimes recommendations returns more than the limit for some reason
+        return track_ids[-limit:]
 
     def add_tracks_to_queue(self, track_ids):
         for track_id in track_ids:

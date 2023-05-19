@@ -78,7 +78,7 @@ class App:
         if "music_request" not in st.session_state:
             st.session_state[
                 "music_request"
-            ] = "I'm DJing a really cool party in Manhattan. I need music that won't interrupt the conversation but will get people moving and bobbing their heads. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."
+            ] = "I'm DJing a really cool party in Manhattan. I need music that won't get in the way of people's conversations but will get them moving. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."
 
         if st.session_state["signed_in"]:
             self.title()
