@@ -1,8 +1,7 @@
 import streamlit as st
 import openai
-from constants import DEFAULT_SEARCH_PARAMETERS
+from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
 from prompts.shared_elements import beginning_of_yaml
-from constants import recommendation_genres
 import yaml
 import random
 from utils import deep_merge_dicts
@@ -13,7 +12,7 @@ from utils import deep_merge_dicts
 SPECIAL_ATTRIBUTES = ["year"]
 
 
-class PlaylistGenerator:
+class PlaylistHandler:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
 

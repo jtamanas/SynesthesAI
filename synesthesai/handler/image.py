@@ -9,10 +9,15 @@ import openai
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
+summary_prompt = """Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
+        ```{description}```
+        Summary: """
+
+
 class ImageHandler:
     def __init__(self, image_file: BinaryIO) -> None:
         self.openai_engine = "text-davinci-003"
-        self.summary_prompt = "Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres"
+        self.summary_prompt = summary_prompt
         self.openai_temperature = 0.9
         self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
@@ -20,7 +25,7 @@ class ImageHandler:
     def get_summary(self, description):
         response = openai.Completion.create(
             engine=self.openai_engine,
-            prompt=f"{self.summary_prompt}: '{description}'",
+            prompt=summary_prompt.format(description=description),
             temperature=self.openai_temperature,
             max_tokens=60,
         )
