@@ -142,4 +142,4 @@ recommendation_genres = [
     "work-out",
     "world-music",
 ]
-list_of_recommendation_genres = """{genres}""".format(genres=recommendation_genres)
+list_of_recommendation_genres_str = """{genres}""".format(genres=recommendation_genres)

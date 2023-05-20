@@ -1,5 +1,5 @@
 from datetime import datetime
-from constants import list_of_recommendation_genres
+from constants import list_of_recommendation_genres_str
 
 beginning_of_yaml = """genres:
   - """
@@ -42,7 +42,7 @@ instructions = """Using this information, I want you to make a YAML that contain
 
 {yaml_example}
 
-This is the list of genres available on spotify: {list_of_recommendation_genres}. Pick at last one genre and don't recommend genres outside of that list. Finally, feel free to suggest up to 4 musical artists as a list of names under the key "artists".""".format(
+This is the list of genres available on spotify: {list_of_recommendation_genres_str}. Pick at last one genre and don't recommend genres outside of that list. Finally, feel free to suggest up to 4 musical artists as a list of names under the key "artists".""".format(
     yaml_example=yaml_example,
-    list_of_recommendation_genres=list_of_recommendation_genres,
+    list_of_recommendation_genres_str=list_of_recommendation_genres_str,
 )

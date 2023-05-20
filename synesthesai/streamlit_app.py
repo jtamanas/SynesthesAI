@@ -1,12 +1,11 @@
-from image_handler import ImageHandler
-from spotify_handler import SpotifyHandler
-from playlist_generator import PlaylistGenerator
-import streamlit as st
-import prompts.mood
-import prompts.image
+import prompts.image as image_prompt
+import prompts.mood as mood_prompt
+from handler.image import ImageHandler
+from handler.spotify import SpotifyHandler
+from handler.playlist import PlaylistHandler
 from css import css
 from utils import dict_to_string
-import os
+import streamlit as st
 
 
 class App:
@@ -15,7 +14,7 @@ class App:
         spotify_handler,
     ):
         self.spotify_handler = spotify_handler
-        self.playlist_generator = PlaylistGenerator(spotify_handler=spotify_handler)
+        self.playlist_generator = PlaylistHandler(spotify_handler=spotify_handler)
 
     def title(self):
         st.markdown(
@@ -114,13 +113,13 @@ class App:
                     )
 
             if uploaded_image:
-                prompt = prompts.image.prompt
+                prompt = image_prompt.prompt
                 image_handler = ImageHandler(uploaded_image)
                 with st.spinner("describing your image..."):
                     placeholder.empty()
                     music_request = image_handler.describe()
             else:
-                prompt = prompts.mood.prompt
+                prompt = mood_prompt.prompt
 
             if music_request and music_request != st.session_state["music_request"]:
                 if len(music_request) > 2:
@@ -148,6 +147,7 @@ class App:
                         if st.button("make another"):
                             st.caching.clear_cache()
                             st.experimental_rerun()
+                    uploaded_image = None
 
 
 if __name__ == "__main__":
