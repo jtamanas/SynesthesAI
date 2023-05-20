@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
+from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres, debug_yaml
 from prompts.shared_elements import beginning_of_yaml
 import yaml
 import random
@@ -34,32 +34,7 @@ class PlaylistHandler:
     def get_recommendation_parameters(self, prompt, debug=True):
         try:
             if debug:
-                generated_yaml = """
-genres:
-  - classical
-  - ambient
-playlist_name: '[TEST] Starry Night Vibes'
-energy:
-  min: 0
-  max: 0.3
-danceability:
-  min: 0
-  max: 0.3
-valence:
-  min: 0.6
-  max: 0.9
-acousticness:
-  min: 0.7
-  max: 1
-year:
-  min: 1988
-  max: 2002
-artists:
-  - Ludovico Einaudi
-  - Nujabes
-  - Gustavo Santaolalla
-  - Hans Zimmer
-                """
+                generated_yaml = debug_yaml
             else:
                 # Send the prompt to the OpenAI API
                 response = openai.Completion.create(

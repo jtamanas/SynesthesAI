@@ -143,3 +143,30 @@ recommendation_genres = [
     "world-music",
 ]
 list_of_recommendation_genres_str = """{genres}""".format(genres=recommendation_genres)
+
+debug_yaml = """
+genres:
+  - classical
+  - ambient
+playlist_name: '[TEST] Starry Night Vibes'
+energy:
+  min: 0
+  max: 0.3
+danceability:
+  min: 0
+  max: 0.3
+valence:
+  min: 0.6
+  max: 0.9
+acousticness:
+  min: 0.7
+  max: 1
+year:
+  min: 1988
+  max: 2002
+artists:
+  - Ludovico Einaudi
+  - Nujabes
+  - Gustavo Santaolalla
+  - Hans Zimmer
+"""
