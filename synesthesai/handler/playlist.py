@@ -4,7 +4,7 @@ from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
 from prompts.shared_elements import beginning_of_toml
 from prompts.fix_toml import prompt as fix_toml_prompt
 import random
-from utils import deep_merge_dicts
+from utils import deep_merge_dicts, pull_keys_to_top_level
 import tomllib as toml
 
 # these are attributes that are not meant to be treated like the others
@@ -121,6 +121,9 @@ values = [
                     DEFAULT_SEARCH_PARAMETERS, playlist_data
                 )  # merge with default parameters
 
+                top_level_keys = [key for key in DEFAULT_SEARCH_PARAMETERS.keys()]
+                pull_keys_to_top_level(playlist_data, top_level_keys)
+
             except Exception as e:
                 print(f"Unexpected error when parsing TOML: {e}")
 
@@ -157,31 +160,66 @@ values = [
                     print(f'Unexpected error when parsing "fixed" TOML: {e}')
                     raise
 
-            playlist_data["seed_genres"] = self.filter_genres(playlist_data["genres"])
+            print("THIS IS THE TOML AFTER FIXING AND BEFORE LIMITING SEEDS")
+            print(playlist_data)
 
-            if "artists" in playlist_data:
-                playlist_data["seed_artists"] = self.get_ids_from_search(
-                    names=playlist_data["artists"],
-                    years=playlist_data["year"],
-                    search_type="artist",
-                )
-                if len(playlist_data["seed_artists"]) > 1:
-                    playlist_data["seed_genres"] = playlist_data["seed_genres"][:1]
-
-            if "tracks" in playlist_data:
-                playlist_data["seed_tracks"] = self.get_ids_from_search(
-                    names=playlist_data["tracks"],
-                    years=playlist_data["year"],
-                    search_type="track",
-                )
-                if len(playlist_data["seed_tracks"]) > 1:
-                    playlist_data["seed_artists"] = playlist_data["seed_artists"][:1]
+            playlist_data = self.limit_number_of_seeds(playlist_data)
 
         except Exception as e:
             print(f"Unexpected error in get_recommendation_parameters: {e}")
             raise
 
+        print("THIS IS THE TOML AT THE END OF THE FUNCTION")
+        print(playlist_data)
+
         return playlist_data
+    
+    def limit_number_of_seeds(self, query_dict):
+        """
+        Spotify limits the number of seeds to 3, so we need to limit the number of seeds.
+        Additionally, if more than one seed is given, the playlist will be based on the 
+        first seed. This is because Spotify will fail if multiple seeds of 
+        length > 1 are given.
+        """
+
+        # Filter genres
+        if "genres" in query_dict:
+            query_dict["seed_genres"] = self.filter_genres(query_dict["genres"])
+
+        # Get artist IDs
+        artist_ids = []
+        if "artists" in query_dict:
+            artist_ids = self.get_ids_from_search(
+                names=query_dict["artists"],
+                years=query_dict["year"],
+                search_type="artist",
+            )
+            query_dict["seed_artists"] = artist_ids
+
+        # Get track IDs
+        track_ids = []
+        if "tracks" in query_dict:
+            track_ids = self.get_ids_from_search(
+                names=query_dict["tracks"],
+                years=query_dict["year"],
+                search_type="track",
+            )
+            query_dict["seed_tracks"] = track_ids
+
+
+        # Limit number of seeds
+        if artist_ids or track_ids:
+            query_dict["seed_genres"] = query_dict.get("seed_genres", [])[:1]
+        if track_ids:
+            query_dict["seed_artists"] = query_dict.get("seed_artists", [])[:1]
+
+        for key in ["seed_artists", "seed_genres", "seed_tracks"]:
+            if key in query_dict:
+                query_dict[key] = query_dict[key][:3]
+
+        return query_dict
+
+
 
     def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
         new_search_dict = {}
