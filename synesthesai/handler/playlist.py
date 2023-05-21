@@ -219,8 +219,6 @@ values = [
 
         return query_dict
 
-
-
     def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
         new_search_dict = {}
         for key, val in spotify_search_dict.items():
@@ -378,10 +376,6 @@ values = [
                     target_range_query, track_ids
                 )
             print(target_range_query)
-            new_track_ids = self.get_track_recommendations(
-                limit=num_enhanced_tracks_to_add, **target_range_query
-            )
-            track_ids.extend(new_track_ids)
             new_track_ids = self.get_track_recommendations(
                 limit=num_enhanced_tracks_to_add, **target_range_query
             )
