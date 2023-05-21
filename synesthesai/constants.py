@@ -1,5 +1,7 @@
 DEFAULT_SEARCH_PARAMETERS = {
     "genres": [],
+    "artists": [],
+    "tracks": [],
     "acousticness": {"min": 0, "max": 1},
     "danceability": {"min": 0, "max": 1},
     "energy": {"min": 0, "max": 1},
