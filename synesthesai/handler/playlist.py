@@ -1,12 +1,11 @@
 import streamlit as st
 import openai
 from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
-import prompts.fix_yaml as fix_yaml
-from prompts.shared_elements import beginning_of_yaml
-import yaml
+from prompts.shared_elements import beginning_of_toml
+from prompts.fix_toml import prompt as fix_toml_prompt
 import random
-from utils import deep_merge_dicts
-
+from utils import deep_merge_dicts, pull_keys_to_top_level
+import tomllib as toml
 
 # these are attributes that are not meant to be treated like the others
 # re: making min, max, and target arguments
@@ -16,6 +15,21 @@ SPECIAL_ATTRIBUTES = ["year"]
 class PlaylistHandler:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
+
+    def get_lists_from_values(self, dict_with_values_key):
+        """
+        Takes in a dictionary with keys whose values are dictionaries. 
+        Some of these sub-dictionaries have a values key with a list of values.
+        Extracts the values from these sub-dictionaries and returns a list of them
+        to be used as the value for the key in the original dictionary.
+        """
+        result = {}
+        for key, value in dict_with_values_key.items():
+            if isinstance(value, dict) and 'values' in value:
+                result[key] = value['values']
+            else:
+                result[key] = value
+        return result
 
     # your methods like get_recommendation_parameters, filter_genres, get_track_recommendations etc.
     def range_min_max_to_target(self, min_max_dict):
@@ -35,34 +49,44 @@ class PlaylistHandler:
     def get_recommendation_parameters(self, prompt, debug=True):
         try:
             if debug:
-                generated_yaml = """
-genres:
-  - classical
-  - ambient
-playlist_name: '[TEST] Starry Night Vibes'
-speechiness
-  min: 0
-  max: 0.3
-energy:
-  min: 0
-  max: 0.3
-danceability:
-  min: 0
-  max: 0.3
-valence:
-  min: 0.6
-  max: 0.9
-acousticness
-  min: 0.7
-  max: 1
-year:
-  min: 1988
-  max: 2002
-artists:
-  - Ludovico - Einaudi
-  - Nujabes
-  - Gustavo Santaolalla
-  - Hans Zimmer
+                generated_toml = """
+playlist_name = "[TEST] Starry Night Vibes"
+[genres]
+values = ["classical", "ambient"]
+
+[speechiness]
+min = 0
+max = 0.3
+
+[energy]
+min = 0
+max = 0.3
+
+[danceability]
+min = 0
+max = 0.3
+
+[valence]
+min = 0.6
+max = 0.9
+
+[acousticness]
+min = 0.7
+max = 1
+
+[year]
+min = 1988
+max = 2002
+
+[artists]
+values = ["Ludovico - Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
+
+[tracks]
+values = [
+  "Someone You Loved by Lewis Capaldi",
+  "When the Party's Over by Billie Eilish",
+  "Love Me Now by John Legend"
+]
                 """
             else:
                 # Send the prompt to the OpenAI API
@@ -74,71 +98,128 @@ artists:
                     stop=None,
                     temperature=1.0,
                 )
-                # Extract the generated YAML from the response
-                generated_yaml = response.choices[0].text.strip()
-                generated_yaml = beginning_of_yaml + generated_yaml
-                print(generated_yaml)
+                # Extract the generated TOML from the response
+                generated_toml = response.choices[0].text.strip()
+                generated_toml = beginning_of_toml + generated_toml
+                # Trim out "---" from the beginning and end if they exist
+                # the longest string is the one we want
+                generated_toml = generated_toml.split("---\n")
+                generated_toml = max(generated_toml, key=len)
+                # do the same with ``` if it exist`
+                generated_toml = generated_toml.split("```")
+                generated_toml = max(generated_toml, key=len)
+                print(generated_toml)
 
             try:
-                playlist_data = yaml.safe_load(generated_yaml)
+                playlist_data = toml.loads(generated_toml)
+                # Lists are parsed as dictionaries with a values key. 
+                # Extract the values from these dictionaries
+                playlist_data = self.get_lists_from_values(playlist_data)
+                print("THIS IS THE TOML IMMEIDATELY AFTER PARSING")
+                print(playlist_data)
                 playlist_data = deep_merge_dicts(
                     DEFAULT_SEARCH_PARAMETERS, playlist_data
                 )  # merge with default parameters
 
-            except Exception as e:
-                print(f"Unexpected error when parsing YAML: {e}")
+                top_level_keys = [key for key in DEFAULT_SEARCH_PARAMETERS.keys()]
+                pull_keys_to_top_level(playlist_data, top_level_keys)
 
-                # Pass the generated YAML back into the OpenAI API to generate a new YAML
-                response = openai.Edit.create(
-                    engine="code-davinci-edit-001",
-                    input=generated_yaml,
-                    instruction="Fix this YAML.",
-                    n=1,
-                    temperature=0.8,
-                )
-                # Extract the new generated YAML from the response
-                generated_yaml = response.choices[0].text.strip()
+            except Exception as e:
+                print(f"Unexpected error when parsing TOML: {e}")
+
+                print("THIS IS THE BROKEN TOML")
+                print(generated_toml)
+                # Pass the generated TOML back into the OpenAI API to generate a new TOML
+                # response = openai.Completion.create(
+                #     engine="text-babbage-001",
+                #     prompt=fix_toml_prompt.format(yaml=generated_toml),
+                #     max_tokens=300,
+                #     n=1,
+                #     stop=None,
+                #     temperature=0.5,
+                # )
+                # Extract the new generated TOML from the response
+                generated_toml = response.choices[0].text.strip()
+                generated_toml = beginning_of_toml + generated_toml
                 # Trim out "---" from the beginning and end if they exist
-                generated_yaml = generated_yaml.split("---\n")
                 # the longest string is the one we want
-                generated_yaml = max(generated_yaml, key=len)
-                print("THIS IS THE FIXED YAML")
-                print(generated_yaml)
-                # Parse the new generated YAML
+                generated_toml = generated_toml.split("---\n")
+                generated_toml = max(generated_toml, key=len)
+                # do the same with ``` if it exist`
+                generated_toml = generated_toml.split("```")
+                generated_toml = max(generated_toml, key=len)
+                print("THIS IS THE FIXED TOML")
+                print(generated_toml)
+                # Parse the new generated TOML
                 try:
-                    playlist_data = yaml.safe_load(generated_yaml)
+                    playlist_data = toml.loads(generated_toml)
                     playlist_data = deep_merge_dicts(
                         DEFAULT_SEARCH_PARAMETERS, playlist_data
                     )  # merge with default parameters
                 except Exception as e:
-                    print(f'Unexpected error when parsing "fixed" YAML: {e}')
+                    print(f'Unexpected error when parsing "fixed" TOML: {e}')
                     raise
 
-            playlist_data["seed_genres"] = self.filter_genres(playlist_data["genres"])
+            print("THIS IS THE TOML AFTER FIXING AND BEFORE LIMITING SEEDS")
+            print(playlist_data)
 
-            if "artists" in playlist_data:
-                playlist_data["seed_artists"] = self.get_ids_from_search(
-                    names=playlist_data["artists"],
-                    years=playlist_data["year"],
-                    search_type="artist",
-                )
-                if len(playlist_data["seed_artists"]) > 1:
-                    playlist_data["seed_genres"] = playlist_data["seed_genres"][:1]
-
-            if "tracks" in playlist_data:
-                playlist_data["seed_tracks"] = self.get_ids_from_search(
-                    names=playlist_data["tracks"],
-                    years=playlist_data["year"],
-                    search_type="track",
-                )
-                if len(playlist_data["seed_tracks"]) > 1:
-                    playlist_data["seed_artists"] = playlist_data["seed_artists"][:1]
+            playlist_data = self.limit_number_of_seeds(playlist_data)
 
         except Exception as e:
             print(f"Unexpected error in get_recommendation_parameters: {e}")
             raise
 
+        print("THIS IS THE TOML AT THE END OF THE FUNCTION")
+        print(playlist_data)
+
         return playlist_data
+    
+    def limit_number_of_seeds(self, query_dict):
+        """
+        Spotify limits the number of seeds to 3, so we need to limit the number of seeds.
+        Additionally, if more than one seed is given, the playlist will be based on the 
+        first seed. This is because Spotify will fail if multiple seeds of 
+        length > 1 are given.
+        """
+
+        # Filter genres
+        if "genres" in query_dict:
+            query_dict["seed_genres"] = self.filter_genres(query_dict["genres"])
+
+        # Get artist IDs
+        artist_ids = []
+        if "artists" in query_dict:
+            artist_ids = self.get_ids_from_search(
+                names=query_dict["artists"],
+                years=query_dict["year"],
+                search_type="artist",
+            )
+            query_dict["seed_artists"] = artist_ids
+
+        # Get track IDs
+        track_ids = []
+        if "tracks" in query_dict:
+            track_ids = self.get_ids_from_search(
+                names=query_dict["tracks"],
+                years=query_dict["year"],
+                search_type="track",
+            )
+            query_dict["seed_tracks"] = track_ids
+
+
+        # Limit number of seeds
+        if artist_ids or track_ids:
+            query_dict["seed_genres"] = query_dict.get("seed_genres", [])[:1]
+        if track_ids:
+            query_dict["seed_artists"] = query_dict.get("seed_artists", [])[:1]
+
+        for key in ["seed_artists", "seed_genres", "seed_tracks"]:
+            if key in query_dict:
+                query_dict[key] = query_dict[key][:3]
+
+        return query_dict
+
+
 
     def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
         new_search_dict = {}
@@ -271,7 +352,7 @@ artists:
     ):
         music_request = music_request or ""
         formatted_prompt = prompt.format(
-            beginning_of_yaml=beginning_of_yaml, music_request=music_request
+            beginning_of_toml=beginning_of_toml, music_request=music_request
         )
         raw_playlist_query = self.get_recommendation_parameters(
             formatted_prompt, debug=debug

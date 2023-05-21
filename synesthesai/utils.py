@@ -27,3 +27,18 @@ def deep_merge_dicts(dict1, dict2):
         else:
             merged[key] = value
     return merged
+
+
+def pull_keys_to_top_level(data, keys):
+    """Pull keys from nested dictionaries to the top level."""
+    to_move = {}
+
+    def traverse_dict(d):
+        for key, value in list(d.items()):  # We use list to avoid RuntimeError due to size change during iteration
+            if key in keys:
+                to_move[key] = d.pop(key)
+            elif isinstance(value, dict):
+                traverse_dict(value)
+                
+    traverse_dict(data)
+    data.update(to_move)
