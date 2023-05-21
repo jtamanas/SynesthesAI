@@ -144,9 +144,13 @@ class App:
                         st.text(dict_to_string(playlist_data))
 
                         # Restart button
-                        if st.button("make another"):
-                            st.caching.clear_cache()
-                            st.experimental_rerun()
+                        st.markdown(
+                            f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>', 
+                            unsafe_allow_html=True,
+                        )
+                        # if st.button("make another"):
+                        #     st.caching.clear_cache()
+                        #     st.experimental_rerun()
                     uploaded_image = None
 
 

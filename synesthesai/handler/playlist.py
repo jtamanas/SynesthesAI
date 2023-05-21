@@ -1,6 +1,7 @@
 import streamlit as st
 import openai
 from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
+import prompts.fix_yaml as fix_yaml
 from prompts.shared_elements import beginning_of_yaml
 import yaml
 import random
@@ -39,6 +40,9 @@ genres:
   - classical
   - ambient
 playlist_name: '[TEST] Starry Night Vibes'
+speechiness
+  min: 0
+  max: 0.3
 energy:
   min: 0
   max: 0.3
@@ -48,14 +52,14 @@ danceability:
 valence:
   min: 0.6
   max: 0.9
-acousticness:
+acousticness
   min: 0.7
   max: 1
 year:
   min: 1988
   max: 2002
 artists:
-  - Ludovico Einaudi
+  - Ludovico - Einaudi
   - Nujabes
   - Gustavo Santaolalla
   - Hans Zimmer
@@ -83,7 +87,32 @@ artists:
 
             except Exception as e:
                 print(f"Unexpected error when parsing YAML: {e}")
-                raise
+
+                # Pass the generated YAML back into the OpenAI API to generate a new YAML
+                response = openai.Edit.create(
+                    engine="code-davinci-edit-001",
+                    input=generated_yaml,
+                    instruction="Fix this YAML.",
+                    n=1,
+                    temperature=0.8,
+                )
+                # Extract the new generated YAML from the response
+                generated_yaml = response.choices[0].text.strip()
+                # Trim out "---" from the beginning and end if they exist
+                generated_yaml = generated_yaml.split("---\n")
+                # the longest string is the one we want
+                generated_yaml = max(generated_yaml, key=len)
+                print("THIS IS THE FIXED YAML")
+                print(generated_yaml)
+                # Parse the new generated YAML
+                try:
+                    playlist_data = yaml.safe_load(generated_yaml)
+                    playlist_data = deep_merge_dicts(
+                        DEFAULT_SEARCH_PARAMETERS, playlist_data
+                    )  # merge with default parameters
+                except Exception as e:
+                    print(f'Unexpected error when parsing "fixed" YAML: {e}')
+                    raise
 
             playlist_data["seed_genres"] = self.filter_genres(playlist_data["genres"])
 
@@ -124,6 +153,7 @@ artists:
     def filter_genres(self, genre_names):
         remaining = []
         for genre in genre_names:
+            genre = genre.lower()
             if genre in recommendation_genres:
                 remaining.append(genre)
         if not remaining:
@@ -144,10 +174,11 @@ artists:
             result = self.spotify_handler.spotify.search(
                 f"{name} year:{years['min']}-{years['max']}", type=search_type, limit=1
             )
-            print(
-                f"Searched for {name}, found: {result[f'{search_type}s']['items'][0]['name']}"
-            )
-            pieces.append(result[f"{search_type}s"]["items"][0]["id"])
+            if result[f'{search_type}s']['items']:
+                print(
+                    f"Searched for {name}, found: {result[f'{search_type}s']['items'][0]['name']}"
+                )
+                pieces.append(result[f"{search_type}s"]["items"][0]["id"])
         return pieces
 
     def filter_tracks_by_category(self, tracks, category_range):

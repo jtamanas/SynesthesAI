@@ -9,23 +9,24 @@ import openai
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
-summary_prompt = """Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
-        ```{description}```
-        Summary: """
-
 
 class ImageHandler:
+    # openai_engine = "text-davinci-003"
+    # openai_temperature = 0.9
+    openai_engine = "text-curie-001"
+    openai_temperature = 1.2
+    summary_prompt = """Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
+```{description}```
+Summary: """
+
     def __init__(self, image_file: BinaryIO) -> None:
-        self.openai_engine = "text-davinci-003"
-        self.summary_prompt = summary_prompt
-        self.openai_temperature = 0.9
-        self.model = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
+        self.clip_interrogator = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
 
     def get_summary(self, description):
         response = openai.Completion.create(
             engine=self.openai_engine,
-            prompt=summary_prompt.format(description=description),
+            prompt=self.summary_prompt.format(description=description),
             temperature=self.openai_temperature,
             max_tokens=60,
         )
@@ -36,7 +37,7 @@ class ImageHandler:
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
         description = client.run(
-            self.model, input={"image": self.image_file, "mode": "fast"}
+            self.clip_interrogator, input={"image": self.image_file, "mode": "fast"}
         )
         print("Raw description:", description)
 
