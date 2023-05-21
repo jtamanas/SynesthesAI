@@ -12,6 +12,7 @@ DEFAULT_SEARCH_PARAMETERS = {
     "popularity": {"min": 0, "max": 100},
     "year": {"min": 0, "max": 3000},
     "mode": {"min": 0, "max": 1},
+    "key": {"min": 0, "max": 11},
 }
 
 recommendation_genres = [

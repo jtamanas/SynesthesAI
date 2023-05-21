@@ -1,5 +1,5 @@
 from .shared_elements import (
-    beginning_of_yaml,
+    beginning_of_toml,
     audio_features,
     instructions,
 )
@@ -10,8 +10,8 @@ I have an image that I'll describe as `{{music_request}}`. I want a spotify play
 
 {instructions} Again, none of the artists in the description are musical artists.
 
-{beginning_of_yaml}""".format(
-    beginning_of_yaml=beginning_of_yaml,
+{beginning_of_toml}""".format(
+    beginning_of_toml=beginning_of_toml,
     audio_features=audio_features,
     instructions=instructions,
 )
