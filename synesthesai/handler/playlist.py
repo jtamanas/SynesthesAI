@@ -361,8 +361,14 @@ values = [
         # even if there are enough songs in the filter, the vibe of the playlist
         # tends to wander. By limiting the number of tracks from the initial
         # query, we can limit the vibe to just the first n songs
+        # start with one song unless seed track is specified.
+        limit = 1
+        if "seed_tracks" in range_playlist_query:
+            if range_playlist_query["seed_tracks"]:
+                limit = num_enhanced_tracks_to_add
+
         track_ids = self.get_track_recommendations(
-            limit=num_enhanced_tracks_to_add, **range_playlist_query
+            limit=1, **range_playlist_query
         )
         print("Number of tracks: ", len(track_ids))
         while len(track_ids) < num_tracks:
