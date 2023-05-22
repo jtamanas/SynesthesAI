@@ -58,13 +58,6 @@ class App:
         if "code" not in st.session_state:
             st.session_state["code"] = ""
 
-        # set scope and establish connection
-        scopes = " ".join(
-            [
-                "playlist-read-private",
-                "playlist-modify-public",
-            ]
-        )
         # authenticate with response stored in url
 
         if not self.spotify_handler.app_authenticated():
