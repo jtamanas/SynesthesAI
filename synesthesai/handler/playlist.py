@@ -126,39 +126,7 @@ values = [
 
             except Exception as e:
                 print(f"Unexpected error when parsing TOML: {e}")
-
-                print("THIS IS THE BROKEN TOML")
-                print(generated_toml)
-                # Pass the generated TOML back into the OpenAI API to generate a new TOML
-                # response = openai.Completion.create(
-                #     engine="text-babbage-001",
-                #     prompt=fix_toml_prompt.format(yaml=generated_toml),
-                #     max_tokens=300,
-                #     n=1,
-                #     stop=None,
-                #     temperature=0.5,
-                # )
-                # Extract the new generated TOML from the response
-                generated_toml = response.choices[0].text.strip()
-                generated_toml = beginning_of_toml + generated_toml
-                # Trim out "---" from the beginning and end if they exist
-                # the longest string is the one we want
-                generated_toml = generated_toml.split("---\n")
-                generated_toml = max(generated_toml, key=len)
-                # do the same with ``` if it exist`
-                generated_toml = generated_toml.split("```")
-                generated_toml = max(generated_toml, key=len)
-                print("THIS IS THE FIXED TOML")
-                print(generated_toml)
-                # Parse the new generated TOML
-                try:
-                    playlist_data = toml.loads(generated_toml)
-                    playlist_data = deep_merge_dicts(
-                        DEFAULT_SEARCH_PARAMETERS, playlist_data
-                    )  # merge with default parameters
-                except Exception as e:
-                    print(f'Unexpected error when parsing "fixed" TOML: {e}')
-                    raise
+                raise
 
             print("THIS IS THE TOML AFTER FIXING AND BEFORE LIMITING SEEDS")
             print(playlist_data)
