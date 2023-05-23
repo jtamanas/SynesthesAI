@@ -1,11 +1,11 @@
 import streamlit as st
-import openai
 from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
 from prompts.shared_elements import beginning_of_toml
-from prompts.fix_toml import prompt as fix_toml_prompt
 import random
 from utils import deep_merge_dicts, pull_keys_to_top_level
 import tomllib as toml
+from LLM.openai import OpenAI
+from LLM.palm import PaLM
 
 # these are attributes that are not meant to be treated like the others
 # re: making min, max, and target arguments
@@ -15,6 +15,10 @@ SPECIAL_ATTRIBUTES = ["year"]
 class PlaylistHandler:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
+        # self.LLM = PaLM(model="models/text-bison-001")
+        self.LLM = OpenAI(model="text-davinci-003")
+        self.max_tokens = 300
+        self.temperature = 1.0
 
     def get_lists_from_values(self, dict_with_values_key):
         """
@@ -90,16 +94,14 @@ values = [
                 """
             else:
                 # Send the prompt to the OpenAI API
-                response = openai.Completion.create(
-                    engine="text-davinci-003",
+                generated_toml = self.LLM.complete(
                     prompt=prompt,
-                    max_tokens=300,
-                    n=1,
-                    stop=None,
-                    temperature=1.0,
+                    max_tokens=self.max_tokens,
+                    temperature=self.temperature,
                 )
+                print("THIS IS THE LLM RESPONSE")
+                print(generated_toml)
                 # Extract the generated TOML from the response
-                generated_toml = response.choices[0].text.strip()
                 generated_toml = beginning_of_toml + generated_toml
                 # Trim out "---" from the beginning and end if they exist
                 # the longest string is the one we want

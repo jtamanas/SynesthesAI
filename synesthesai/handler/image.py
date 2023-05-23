@@ -4,41 +4,49 @@ from PIL import Image
 from io import BytesIO
 import streamlit as st
 import replicate
-import openai
+from LLM.openai import OpenAI
+from LLM.palm import PaLM
 
-openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 
 class ImageHandler:
-    # openai_engine = "text-davinci-003"
-    # openai_temperature = 0.9
-    openai_engine = "text-curie-001"
-    openai_temperature = 1.2
-    summary_prompt = """Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
-```{description}```
-Summary: """
 
     def __init__(self, image_file: BinaryIO) -> None:
         self.clip_interrogator = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
+        
+        # self.LLM = PaLM(model="models/text-bison-001")
+        # self.temperature = 0.7
+        self.LLM = OpenAI(model="text-curie-001")
+        self.temperature = 1.2
+        # self.LLM = OpenAI(model="text-davinci-003")
+        # self.temperature = 0.9
+        self.max_tokens = 60
+        self.summary_prompt = """Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
+    ```{description}```
+    Summary: """
 
     def get_summary(self, description):
-        response = openai.Completion.create(
-            engine=self.openai_engine,
-            prompt=self.summary_prompt.format(description=description),
-            temperature=self.openai_temperature,
-            max_tokens=60,
+        prompt = self.summary_prompt.format(description=description)
+        print("THIS IS THE PROMPT")
+        print(prompt)
+        response = self.LLM.complete(
+            prompt=prompt,
+            max_tokens=self.max_tokens,
+            temperature=self.temperature,
         )
-        return response.choices[0].text.strip()
+        return response
 
     def describe(self, postprocess=True):
         """Describe the full image."""
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
-        description = client.run(
-            self.clip_interrogator, input={"image": self.image_file, "mode": "fast"}
-        )
+        # description = client.run(
+        #     self.clip_interrogator, input={"image": self.image_file, "mode": "fast"}
+        # )
+        description = "a painting of a cat sitting on top of a table, kandinsky touches, kandinsky style, kandinski, vasily kandinsky, by Kandinsky, by Wassily Kandinsky, wasily kandinsky, bauhaus art, inspired by Wassily Kandinsky, inspired by Kandinsky, abstractionism, futurism painting, bauhaus style painting"
+        
         print("Raw description:", description)
 
         if postprocess:
