@@ -6,7 +6,6 @@ numpy
 pandas
 Pillow
 spotipy
-streamlit
 toml
 tqdm
 urllib3
