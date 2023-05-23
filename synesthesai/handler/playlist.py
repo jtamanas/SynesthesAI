@@ -2,7 +2,7 @@ import streamlit as st
 from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
 from prompts.shared_elements import beginning_of_toml
 import random
-from utils import deep_merge_dicts, pull_keys_to_top_level
+from utils import deep_merge_dicts, pull_keys_to_top_level, remove_default_attributes
 import tomllib as toml
 from LLM.openai import OpenAI
 from LLM.palm import PaLM
@@ -17,7 +17,7 @@ class PlaylistHandler:
         self.spotify_handler = spotify_handler
         self.LLM = PaLM(model="models/text-bison-001")
         # self.LLM = OpenAI(model="text-davinci-003")
-        self.max_tokens = 300
+        self.max_tokens = 350
         self.temperature = 1.0
 
     def get_lists_from_values(self, dict_with_values_key):
@@ -45,7 +45,11 @@ class PlaylistHandler:
         new_query_dict = {}
         for key, val in query_dict.items():
             if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
-                new_query_dict[key] = self.range_min_max_to_target(val)
+                try:
+                    new_query_dict[key] = self.range_min_max_to_target(val)
+                except:
+                    print(f"DROPPED {key} BECAUSE IT LACKED MIN/MAX KEYS")
+                    pass
             else:
                 new_query_dict[key] = val
         return new_query_dict
@@ -115,10 +119,12 @@ values = [
                 playlist_data = self.get_lists_from_values(playlist_data)
                 print("THIS IS THE TOML IMMEIDATELY AFTER PARSING")
                 print(playlist_data)
-                playlist_data = deep_merge_dicts(
-                    DEFAULT_SEARCH_PARAMETERS, playlist_data
-                )  # merge with default parameters
-
+                # merge with default parameters
+                playlist_data = deep_merge_dicts(DEFAULT_SEARCH_PARAMETERS, playlist_data)  
+                # drop keys that were never specified. They mess up the search
+                playlist_data = remove_default_attributes(
+                    DEFAULT_SEARCH_PARAMETERS, playlist_data, keys_to_keep=["year"]
+                )
                 top_level_keys = [key for key in DEFAULT_SEARCH_PARAMETERS.keys()]
                 pull_keys_to_top_level(playlist_data, top_level_keys)
 
@@ -324,35 +330,33 @@ values = [
         print("Got playlist parameters")
         range_playlist_query = self.get_playlist_query_with_ranges(raw_playlist_query)
 
+        playlist_query = range_playlist_query
+
         # even if there are enough songs in the filter, the vibe of the playlist
         # tends to wander. By limiting the number of tracks from the initial
         # query, we can limit the vibe to just the first n songs
         # start with one song unless seed track is specified.
-        limit = 1
-        if "seed_tracks" in range_playlist_query:
-            if range_playlist_query["seed_tracks"]:
-                limit = num_enhanced_tracks_to_add
-
         track_ids = self.get_track_recommendations(
-            limit=1, **range_playlist_query
+            limit=1, **playlist_query
         )
         print("Number of tracks: ", len(track_ids))
         while len(track_ids) < num_tracks:
             print("Enhancing the playlist...")
-            target_range_query = self.get_playlist_query_with_targets(
-                raw_playlist_query
-            )
-            print(target_range_query)
             if track_ids:
-                target_range_query = self.get_seed_tracks_query(
-                    target_range_query, track_ids
+                playlist_query = self.get_seed_tracks_query(
+                    playlist_query, track_ids
                 )
-            print(target_range_query)
             new_track_ids = self.get_track_recommendations(
-                limit=num_enhanced_tracks_to_add, **target_range_query
+                limit=num_enhanced_tracks_to_add, **playlist_query
             )
-            track_ids.extend(new_track_ids)
-            track_ids = list(set(track_ids))
+            unique_new_tracks = [trk_id for trk_id in new_track_ids if trk_id not in track_ids]
+            if not unique_new_tracks:
+                # if there are no more songs in the fixed ranges, make them targets
+                print("NO MORE TRACKS IN RANGE. SWITCHING TO TARGETS")
+                playlist_query = self.get_playlist_query_with_targets(
+                    raw_playlist_query
+                )
+            track_ids.extend(unique_new_tracks)
             print("Number of tracks: ", len(track_ids))
         print("Got track ids")
 
