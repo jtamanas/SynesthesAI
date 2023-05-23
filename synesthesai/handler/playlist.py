@@ -15,8 +15,8 @@ SPECIAL_ATTRIBUTES = ["year"]
 class PlaylistHandler:
     def __init__(self, spotify_handler):
         self.spotify_handler = spotify_handler
-        # self.LLM = PaLM(model="models/text-bison-001")
-        self.LLM = OpenAI(model="text-davinci-003")
+        self.LLM = PaLM(model="models/text-bison-001")
+        # self.LLM = OpenAI(model="text-davinci-003")
         self.max_tokens = 300
         self.temperature = 1.0
 
@@ -57,10 +57,6 @@ class PlaylistHandler:
 playlist_name = "[TEST] Starry Night Vibes"
 [genres]
 values = ["classical", "ambient"]
-
-[speechiness]
-min = 0
-max = 0.3
 
 [energy]
 min = 0

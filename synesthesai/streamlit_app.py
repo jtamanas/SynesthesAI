@@ -45,6 +45,9 @@ class App:
             st.markdown(welcome_msg, unsafe_allow_html=True)
             st.markdown(link_html, unsafe_allow_html=True)
 
+    def get_users_favorite_genres(self, ):
+        pass
+
     def run(self):
         # setup the page
         # Add some styling with CSS selectors

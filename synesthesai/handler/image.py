@@ -16,14 +16,14 @@ class ImageHandler:
         self.clip_interrogator = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
         
-        # self.LLM = PaLM(model="models/text-bison-001")
-        # self.temperature = 0.7
-        self.LLM = OpenAI(model="text-curie-001")
-        self.temperature = 1.2
+        self.LLM = PaLM(model="models/text-bison-001")
+        self.temperature = 0.7
+        # self.LLM = OpenAI(model="text-curie-001")
+        # self.temperature = 1.2
         # self.LLM = OpenAI(model="text-davinci-003")
         # self.temperature = 0.9
         self.max_tokens = 60
-        self.summary_prompt = """Rewrite this description of an image. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
+        self.summary_prompt = """Rewrite this description of this piece of art. Focus on specific emotions, aesthetics, and genres. No more than two sentences.
     ```{description}```
     Summary: """
 
@@ -45,7 +45,7 @@ class ImageHandler:
         # description = client.run(
         #     self.clip_interrogator, input={"image": self.image_file, "mode": "fast"}
         # )
-        description = "a painting of a cat sitting on top of a table, kandinsky touches, kandinsky style, kandinski, vasily kandinsky, by Kandinsky, by Wassily Kandinsky, wasily kandinsky, bauhaus art, inspired by Wassily Kandinsky, inspired by Kandinsky, abstractionism, futurism painting, bauhaus style painting"
+        description = "a tattooed man and a naked woman on the ground, yakuza tattoo on body, hans bellmer and nadav kander, nobuyoshi araki, shunga style, of taiwanese girl with tattoos, by Li Shida, hans bellmer and wlop, sorayama, tattooed man, yakuza slim girl, daido moriyama, ryan mcginley"
         
         print("Raw description:", description)
 
