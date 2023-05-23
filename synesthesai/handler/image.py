@@ -42,11 +42,9 @@ class ImageHandler:
         """Describe the full image."""
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
-        # description = client.run(
-        #     self.clip_interrogator, input={"image": self.image_file, "mode": "fast"}
-        # )
-        description = "a tattooed man and a naked woman on the ground, yakuza tattoo on body, hans bellmer and nadav kander, nobuyoshi araki, shunga style, of taiwanese girl with tattoos, by Li Shida, hans bellmer and wlop, sorayama, tattooed man, yakuza slim girl, daido moriyama, ryan mcginley"
-        
+        description = client.run(
+            self.clip_interrogator, input={"image": self.image_file, "mode": "fast"}
+        )
         print("Raw description:", description)
 
         if postprocess:
