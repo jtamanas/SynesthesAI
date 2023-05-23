@@ -58,10 +58,6 @@ playlist_name = "[TEST] Starry Night Vibes"
 [genres]
 values = ["classical", "ambient"]
 
-[speechiness]
-min = 0
-max = 0.3
-
 [energy]
 min = 0
 max = 0.3

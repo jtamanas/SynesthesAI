@@ -16,10 +16,10 @@ class ImageHandler:
         self.clip_interrogator = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.image_file = image_file
         
-        # self.LLM = PaLM(model="models/text-bison-001")
-        # self.temperature = 0.7
-        self.LLM = OpenAI(model="text-curie-001")
-        self.temperature = 1.2
+        self.LLM = PaLM(model="models/text-bison-001")
+        self.temperature = 0.7
+        # self.LLM = OpenAI(model="text-curie-001")
+        # self.temperature = 1.2
         # self.LLM = OpenAI(model="text-davinci-003")
         # self.temperature = 0.9
         self.max_tokens = 60
