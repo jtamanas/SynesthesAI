@@ -39,7 +39,7 @@ max = ...
     beginning_of_toml=beginning_of_toml
 )
 
-instructions = """You're the world's best DJ. Using this information, I want you to make a TOML that contains appropriate values for the attributes listed. Not every attribute needs to be listed, just the ones that you think are important to specify. This TOML will be passed to spotify to make a playlist. Be sure to include a six word summary of my mood as the name of the playlist -- be sure to match the tone of my reply. The final TOML should look like:
+instructions = """You're the world's best DJ. Using this information, I want you to make a TOML that contains appropriate values for the attributes listed. This TOML will be passed to spotify to make a playlist. Be sure to include a summary of my mood as the name of the playlist -- match the tone of my reply! The final TOML should look like:
 
 {yaml_example}
 
