@@ -9,7 +9,7 @@ Audio Features (Format: variable_name (range)):
 1. acousticness (0-1): Confidence in the track being acoustic. Higher values indicate higher confidence.
 2. danceability (0-1): Suitability for dancing.
 3. energy (0-1): Intensity and activity measure.
-4. instrumentalness (0-1): Predicts absence of vocals. The closer to 1.0, the greater likelihood the track contains no vocal content.
+4. instrumentalness (0-1): Predicts absence of vocals. The closer to 1.0, the greater likelihood the track lacks vocal content.
 5. key (int): Track's key using Pitch Class notation.
 6. liveness (0-1): Presence of an audience.
 7. loudness (float): Overall loudness.
