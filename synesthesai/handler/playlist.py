@@ -2,7 +2,7 @@ import streamlit as st
 from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
 from prompts.shared_elements import beginning_of_toml
 import random
-from utils import deep_merge_dicts, pull_keys_to_top_level, remove_default_attributes
+from utils import deep_merge_dicts, pull_keys_to_top_level, remove_default_attributes, partial_load_toml
 import tomllib as toml
 from LLM.openai import OpenAI
 from LLM.palm import PaLM
@@ -91,6 +91,8 @@ values = [
   "When the Party's Over by Billie Eilish",
   "Love Me Now by John Legend"
 ]
+[broken]
+values = [
                 """
             else:
                 # Send the prompt to the OpenAI API
@@ -114,23 +116,24 @@ values = [
 
             try:
                 playlist_data = toml.loads(generated_toml)
-                # Lists are parsed as dictionaries with a values key. 
-                # Extract the values from these dictionaries
-                playlist_data = self.get_lists_from_values(playlist_data)
-                print("THIS IS THE TOML IMMEIDATELY AFTER PARSING")
-                print(playlist_data)
-                # merge with default parameters
-                playlist_data = deep_merge_dicts(DEFAULT_SEARCH_PARAMETERS, playlist_data)  
-                # drop keys that were never specified. They mess up the search
-                playlist_data = remove_default_attributes(
-                    DEFAULT_SEARCH_PARAMETERS, playlist_data, keys_to_keep=["year"]
-                )
-                top_level_keys = [key for key in DEFAULT_SEARCH_PARAMETERS.keys()]
-                pull_keys_to_top_level(playlist_data, top_level_keys)
-
             except Exception as e:
-                print(f"Unexpected error when parsing TOML: {e}")
-                raise
+                print("TOML IS BROKEN. LOADING PARTIAL")
+                playlist_data = partial_load_toml(generated_toml)
+
+            # Lists are parsed as dictionaries with a values key. 
+            # Extract the values from these dictionaries
+            playlist_data = self.get_lists_from_values(playlist_data)
+            print("THIS IS THE TOML IMMEIDATELY AFTER PARSING")
+            print(playlist_data)
+            # merge with default parameters
+            playlist_data = deep_merge_dicts(DEFAULT_SEARCH_PARAMETERS, playlist_data)  
+            # drop keys that were never specified. They mess up the search
+            playlist_data = remove_default_attributes(
+                DEFAULT_SEARCH_PARAMETERS, playlist_data, keys_to_keep=["year"]
+            )
+            top_level_keys = [key for key in DEFAULT_SEARCH_PARAMETERS.keys()]
+            pull_keys_to_top_level(playlist_data, top_level_keys)
+
 
             print("THIS IS THE TOML AFTER FIXING AND BEFORE LIMITING SEEDS")
             print(playlist_data)

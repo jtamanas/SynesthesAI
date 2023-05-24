@@ -1,3 +1,6 @@
+import tomllib
+from tomllib import TOMLDecodeError
+
 # base func definitions
 def dict_to_string(d):
     """
@@ -58,3 +61,23 @@ def remove_default_attributes(dict1, dict2, keys_to_keep=[]):
             
     return new_dict
 
+    
+def partial_load_toml(broken_toml_text):
+    """
+    Assume we received a toml that contains some broken bit in it. 
+    Keep cutting out lines until we trim the broken piece
+    """
+    lines = broken_toml_text.split('\n')
+    for i in range(len(lines), 0, -1):
+        try:
+            doc = tomllib.loads('\n'.join(lines[:i]))
+            # Validate that all sections are complete
+            for key in doc.keys():
+                if doc[key] == {} or (isinstance(doc[key], list) and len(doc[key]) > 0 and doc[key][-1] == {}):
+                    raise TOMLDecodeError("Incomplete section")
+            print("WE DROPPED THE FOLLOWING FROM THE TOML")
+            print('\n'.join(lines[i:]))
+            return doc
+        except TOMLDecodeError:
+            continue
+    raise TOMLDecodeError("TOML completely unsalvageable")
