@@ -2,7 +2,13 @@ import streamlit as st
 from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
 from prompts.shared_elements import beginning_of_toml
 import random
-from utils import deep_merge_dicts, pull_keys_to_top_level, remove_default_attributes, partial_load_toml
+from utils import (
+    approximately_the_same_str,
+    deep_merge_dicts, 
+    partial_load_toml,
+    pull_keys_to_top_level, 
+    remove_default_attributes, 
+)
 import tomllib as toml
 from LLM.openai import OpenAI
 from LLM.palm import PaLM
@@ -248,10 +254,13 @@ values = [
                 f"{name} year:{years['min']}-{years['max']}", type=search_type, limit=1
             )
             if result[f'{search_type}s']['items']:
+                resulting_name = result[f'{search_type}s']['items'][0]['name']
                 print(
-                    f"Searched for {name}, found: {result[f'{search_type}s']['items'][0]['name']}"
+                    f"Searched for {name}, found: {resulting_name}"
                 )
-                pieces.append(result[f"{search_type}s"]["items"][0]["id"])
+                if approximately_the_same_str(name, resulting_name):
+                    print(f"Adding {resulting_name} to results")
+                    pieces.append(result[f"{search_type}s"]["items"][0]["id"])
         return pieces
 
     def filter_tracks_by_category(self, tracks, category_range):

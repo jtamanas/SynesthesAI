@@ -1,5 +1,7 @@
 import tomllib
 from tomllib import TOMLDecodeError
+from difflib import SequenceMatcher
+import re
 
 # base func definitions
 def dict_to_string(d):
@@ -81,3 +83,11 @@ def partial_load_toml(broken_toml_text):
         except TOMLDecodeError:
             continue
     raise TOMLDecodeError("TOML completely unsalvageable")
+
+
+def approximately_the_same_str(a, b, cutoff=0.6):
+    def _remove_parentheticals(t):
+        return re.sub("[\(\[].*?[\)\]]", "", t)
+    a = _remove_parentheticals(a)
+    b = _remove_parentheticals(b)
+    return (SequenceMatcher(a=a, b=b).ratio() >= cutoff)
