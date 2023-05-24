@@ -128,7 +128,7 @@ class App:
                             username=username,
                             prompt=prompt,
                             music_request=music_request,
-                            debug=True,
+                            debug=False,
                         )
 
                         if uploaded_image:
