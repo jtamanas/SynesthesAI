@@ -20,6 +20,24 @@ class PlaylistHandler:
         self.max_tokens = 350
         self.temperature = 1.0
 
+    def add_mood_to_genres(self, query_dict):
+        """
+        PaLM especially likes to add a "mood" dictionary. Oftentimes, this is just
+        another way to add genres. We might as well add these to the genre list
+        """
+        def _add_mood(mood_key, q_dict):
+            if mood_key in q_dict:
+                if "genres" in q_dict:
+                    q_dict["genres"] += q_dict[mood_key].pop()
+                else:
+                    q_dict["genres"] = q_dict[mood_key].pop()
+            return q_dict
+        
+        query_dict = _add_mood("mood", q_dict=query_dict)
+        query_dict = _add_mood("moods", q_dict=query_dict)
+        return query_dict
+            
+
     def get_lists_from_values(self, dict_with_values_key):
         """
         Takes in a dictionary with keys whose values are dictionaries. 
@@ -123,6 +141,7 @@ values = [
             # Lists are parsed as dictionaries with a values key. 
             # Extract the values from these dictionaries
             playlist_data = self.get_lists_from_values(playlist_data)
+            playlist_data = self.add_mood_to_genres(playlist_data)
             print("THIS IS THE TOML IMMEIDATELY AFTER PARSING")
             print(playlist_data)
             # merge with default parameters
