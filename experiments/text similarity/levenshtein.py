@@ -1,3 +1,5 @@
+"""Currently, Spotify search will return *a* result, whether it's good or bad. We need a way of rating these results and filtering out bad ones."""
+
 from difflib import SequenceMatcher
 from examples import positive_examples, negative_examples
 import re 
