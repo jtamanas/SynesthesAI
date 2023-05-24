@@ -28,9 +28,9 @@ class PlaylistHandler:
         def _add_mood(mood_key, q_dict):
             if mood_key in q_dict:
                 if "genres" in q_dict:
-                    q_dict["genres"] += q_dict[mood_key].pop()
+                    q_dict["genres"] += q_dict.pop(mood_key)
                 else:
-                    q_dict["genres"] = q_dict[mood_key].pop()
+                    q_dict["genres"] = q_dict.pop(mood_key)
             return q_dict
         
         query_dict = _add_mood("mood", q_dict=query_dict)
