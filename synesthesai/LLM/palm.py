@@ -42,5 +42,7 @@ class PaLM(BaseLLM):
             max_output_tokens=max_tokens,
             safety_settings=self.safety_settings
         )
-        
-        return response.result
+        result = response.result
+        if result is None:
+            print(response)
+        return result
