@@ -1,5 +1,5 @@
 import streamlit as st
-from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres
+from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres, DEBUG_TOML
 from prompts.shared_elements import beginning_of_toml
 import random
 from utils import (
@@ -81,43 +81,7 @@ class PlaylistHandler:
     def get_recommendation_parameters(self, prompt, debug=True):
         try:
             if debug:
-                generated_toml = """
-playlist_name = "[TEST] Starry Night Vibes"
-[genres]
-values = ["classical", "ambient"]
-
-[energy]
-min = 0
-max = 0.3
-
-[danceability]
-min = 0
-max = 0.3
-
-[valence]
-min = 0.6
-max = 0.9
-
-[acousticness]
-min = 0.7
-max = 1
-
-[year]
-min = 1988
-max = 2002
-
-[artists]
-values = ["Ludovico - Einaudi", "Nujabes", "Gustavo Santaolalla", "Hans Zimmer"]
-
-[tracks]
-values = [
-  "Someone You Loved by Lewis Capaldi",
-  "When the Party's Over by Billie Eilish",
-  "Love Me Now by John Legend"
-]
-[broken]
-values = [
-                """
+                generated_toml = DEBUG_TOML
             else:
                 # Send the prompt to the OpenAI API
                 generated_toml = self.LLM.complete(
