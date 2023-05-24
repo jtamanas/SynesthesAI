@@ -1,13 +1,11 @@
-from base import BaseLLM
+from LLM.base import BaseLLM
 import google.generativeai as palm
 from google.generativeai.types import safety_types
 import streamlit as st
-import os
 
 class PaLM(BaseLLM):
     def __init__(self, model: str = "models/text-bison-001") -> None:
-        palm.configure(api_key=os.environ["PALM_API_KEY"])
-        # palm.configure(api_key=st.secrets["PALM_API_KEY"])
+        palm.configure(api_key=st.secrets["PALM_API_KEY"])
         models = [
             m for m in palm.list_models() 
             if ('generateText' in m.supported_generation_methods) 

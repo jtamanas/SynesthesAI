@@ -320,8 +320,8 @@ values = [
         prompt,
         music_request=None,
         debug=False,
-        num_tracks=20,
-        num_enhanced_tracks_to_add=3,
+        num_tracks=15,
+        num_enhanced_tracks_to_add=2,
     ):
         music_request = music_request or ""
         formatted_prompt = prompt.format(

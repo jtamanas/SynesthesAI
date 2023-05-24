@@ -1,7 +1,7 @@
 from datetime import datetime
 from constants import list_of_recommendation_genres_str
 
-beginning_of_toml = """playlist_name = """
+beginning_of_toml = 'playlist_name = "'
 
 audio_features = """Here are the audio features available in the spotify api -- for each of these features below, provide a min and max if you specify it:
 ```
@@ -25,7 +25,7 @@ Audio Features (Format: variable_name (range)):
 
 
 yaml_example = """```
-{beginning_of_toml}"The greatest playlist ever made"
+{beginning_of_toml}The greatest playlist ever made"
 
 [genres]
 values = [...]
