@@ -5,6 +5,7 @@ from constants import recommendation_genres, DEFAULT_SEARCH_PARAMETERS
 from utils import (
     deep_merge_dicts,
     dict_to_string,
+    filter_values,
     pull_keys_to_top_level,
     remove_default_attributes,
 )
@@ -89,7 +90,7 @@ class Playlist:
         """
 
         # Filter genres
-        self.seed_genres = self.filter_genres(self.genres)
+        self.seed_genres = filter_values(self.genres, recommendation_genres)
 
         # Limit number of seeds
         if len(self.seed_artists) > 1 or len(self.seed_tracks) > 1:
@@ -104,43 +105,25 @@ class Playlist:
         if not (self.seed_artists) and not self.seed_genres and self.seed_tracks:
             print("NO ARTISTS, TRACKS, OR GENRES RETURNED")
 
-    def get_query(self):
+    def generate_query(self):
+        self.limit_number_of_seeds()
         playlist_query = self.__dict__
-        playlist_query["tracks"] = [track for track in self.seed_tracks]
-        # playlist_query = {
-        #     "name": self.name,
-        #     "genres": self.genres,
-        #     "artists": self.artists,
-        #     "tracks": [track for track in self.seed_tracks],
-        #     "acousticness": self.acousticness,
-        #     "danceability": self.danceability,
-        #     "energy": self.energy,
-        #     "instrumentalness": self.instrumentalness,
-        #     "liveness": self.liveness,
-        #     "loudness": self.loudness,
-        #     "tempo": self.tempo,
-        #     "valence": self.valence,
-        #     "popularity": self.popularity,
-        #     "year": self.year,
-        #     "mode": self.mode,
-        #     "key": self.key,
-        # }
         return playlist_query
 
-    def get_playlist_query_with_ranges(self):
+    def generate_playlist_query_with_ranges(self):
         new_search_dict = {}
-        for key, val in self.get_query().items():
+        for key, val in self.generate_query().items():
             if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
                 for range_key, range_val in val.items():
                     new_search_dict[f"{range_key}_{key}"] = range_val
             else:
-                new_search_dict[key] = self.get_query()[key]
+                new_search_dict[key] = self.generate_query()[key]
         return new_search_dict
 
-    def get_playlist_query_with_targets(self):
+    def generate_playlist_query_with_targets(self):
         """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
         new_query_dict = {}
-        for key, val in self.get_query().items():
+        for key, val in self.generate_query().items():
             if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
                 try:
                     new_query_dict[key] = self.range_min_max_to_target(val)
@@ -152,11 +135,11 @@ class Playlist:
         return new_query_dict
 
     def filter_genres(self, genre_names):
-        remaining = []
-        for genre in genre_names:
-            genre = genre.lower()
-            if genre in recommendation_genres:
-                remaining.append(genre)
+        remaining = [
+            genre.lower()
+            for genre in genre_names
+            if genre.lower() in recommendation_genres
+        ]
         if not remaining:
             print("NO VALID GENRES RETURNED!")
             print("BUT WE GOT THESE GENRES")
@@ -167,13 +150,12 @@ class Playlist:
         uri = f"spotify:artist:{artist_id}"
         return self.spotify_handler.spotify.artist(uri)
 
-    def filter_tracks_by_category(self, tracks, category_range):
+    def filter_tracks_by_category(self, tracks: List[Track], category_range):
         filtered_tracks = []
         for track in tracks:
-            year = int(track["album"]["release_date"].split("-")[0])
-            if category_range["min"] <= year <= category_range["max"]:
+            if category_range["min"] <= track.year <= category_range["max"]:
                 filtered_tracks.append(track)
         return filtered_tracks
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return dict_to_string(self.__dict__)

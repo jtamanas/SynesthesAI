@@ -1,7 +1,14 @@
 from typing import List
+from utils import fuzzy_filter_values
+from constants import recommendation_genres
 
-class Track:
-    def __init__(self, id, name=None, artist=None, album=None, duration_ms=None, popularity=None, acousticness=None, danceability=None, energy=None, instrumentalness=None, key=None, liveness=None, loudness=None, tempo=None, valence=None, year=None, mode=None):
-        self.id: str = id
-        self.name: str = name
-        self.genres: List[str] = []
+
+class Artist:
+    def __init__(self, **artist_data):
+        for key, value in artist_data.items():
+            setattr(self, key, value)
+
+        self.genres = list(set(fuzzy_filter_values(self.genres, recommendation_genres)))
+
+    def __repr__(self) -> str:
+        return self.name

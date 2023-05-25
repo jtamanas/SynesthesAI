@@ -9,6 +9,7 @@ from utils import (
 import tomllib as toml
 from LLM.openai import OpenAI
 from LLM.palm import PaLM
+from music.artist import Artist
 from music.playlist import Playlist
 from music.track import Track
 
@@ -58,7 +59,7 @@ class PlaylistHandler:
             self.playlist = Playlist(**playlist_data)
             self.add_ids_to_music()
             # I hate that I'm calling this here
-            self.playlist.limit_number_of_seeds()
+            # self.playlist.limit_number_of_seeds()
 
         except Exception as e:
             print(f"Unexpected error in get_recommendation_parameters: {e}")
@@ -66,27 +67,30 @@ class PlaylistHandler:
 
     def add_ids_to_music(self):
         # Get artist IDs
-        artist_ids = []
         if hasattr(self.playlist, "artists"):
-            artist_ids = self.get_ids_from_search(
+            artists = self.get_ids_from_search(
                 names=self.playlist.artists,
                 years=self.playlist.year,
                 search_type="artist",
             )
-            self.playlist.seed_artists = artist_ids
+            self.playlist.seed_artists = artists
 
         # Get track IDs
-        track_ids = []
         if hasattr(self.playlist, "tracks"):
-            track_ids = self.get_ids_from_search(
+            tracks = self.get_ids_from_search(
                 names=self.playlist.tracks,
                 years=self.playlist.year,
                 search_type="track",
             )
-            self.playlist.seed_tracks = track_ids
+            self.playlist.seed_tracks = tracks
 
     def get_ids_from_search(self, names, years, search_type="artist"):
-        """search_type can be artist or tracks currently"""
+        if search_type == "artist":
+            music_object = Artist
+        elif search_type == "track":
+            music_object = Track
+        else:
+            raise ValueError("Search type not artist nor track")
         print(f"getting {search_type} ids")
         pieces = []
         for name in names:
@@ -95,32 +99,42 @@ class PlaylistHandler:
                 f"{name} year:{years['min']}-{years['max']}", type=search_type, limit=1
             )
             if result[f"{search_type}s"]["items"]:
-                resulting_name = result[f"{search_type}s"]["items"][0]["name"]
-                print(f"Searched for {name}, found: {resulting_name}")
-                if approximately_the_same_str(name, resulting_name):
-                    print(f"Adding {resulting_name} to results")
-                    pieces.append(result[f"{search_type}s"]["items"][0]["id"])
+                print("GETTING ID RESULT")
+                print(result)
+                print()
+                result = music_object(**result[f"{search_type}s"]["items"][0])
+                print(f"Searched for {name}, found: {result.name}")
+                print(result.__dict__)
+                if approximately_the_same_str(name, result.name):
+                    print(f"Adding {result.name} to results")
+                    # Update this line to create a Track object
+                    pieces.append(result)
         return pieces
 
     def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
-        """I pull out genres from kwargs to ensure it doesnt mess up the search"""
         print(kwargs)
+
+        # ensure the seed_tracks, seed_artists, seed_genres are list of strings (IDs), not list of Track objects
+        for seed in ["seed_tracks", "seed_artists", "seed_genres"]:
+            if seed in kwargs and kwargs[seed]:
+                kwargs[seed] = [
+                    item.id
+                    if isinstance(item, Track) or isinstance(item, Artist)
+                    else item
+                    for item in kwargs[seed]
+                ]
+
         raw_tracks = self.spotify_handler.spotify.recommendations(
             limit=limit, **kwargs
         )["tracks"]
+
+        all_track_objects = [Track(**track) for track in raw_tracks]
         # filter by year, ensuring only relevant tracks are added
-        tracks = self.playlist.filter_tracks_by_category(
-            raw_tracks,
+        filtered_track_objects = self.playlist.filter_tracks_by_category(
+            all_track_objects,
             category_range=kwargs["year"],
         )
-        track_objects = []
-        for track in tracks:
-            track_name = f'{track["name"]} - {track["artists"][0]["name"]}'
-            track_id = track["id"]
-            print(track_name)
-            track_objects.append(Track(id=track_id, name=track_name))
-        # sometimes recommendations returns more than the limit for some reason
-        return track_objects[-limit:]
+        return filtered_track_objects[-limit:]
 
     def add_tracks_to_queue(self, tracks):
         for track in tracks:
@@ -183,7 +197,8 @@ class PlaylistHandler:
         )
         self.get_recommendation_parameters(formatted_prompt, debug=debug)
         print("Got playlist parameters")
-        playlist_query = self.playlist.get_playlist_query_with_ranges()
+        print("FUOEWHFIUHIUHG")
+        playlist_query = self.playlist.generate_playlist_query_with_ranges()
 
         # even if there are enough songs in the filter, the vibe of the playlist
         # tends to wander. By limiting the number of tracks from the initial
@@ -194,7 +209,8 @@ class PlaylistHandler:
         while len(track_list) < num_tracks:
             print("Enhancing the playlist...")
             if track_list:
-                playlist_query = self.get_seed_tracks_query(playlist_query, track_list)
+                self.playlist.seed_tracks = track_list
+                # playlist_query = self.get_seed_tracks_query(playlist_query, track_list)
             new_track_list = self.get_track_recommendations(
                 limit=num_enhanced_tracks_to_add, **playlist_query
             )
@@ -206,12 +222,12 @@ class PlaylistHandler:
             if not unique_new_tracks:
                 # if there are no more songs in the fixed ranges, make them targets
                 print("NO MORE TRACKS IN RANGE. SWITCHING TO TARGETS")
-                playlist_query = self.playlist.get_playlist_query_with_targets()
+                playlist_query = self.playlist.generate_playlist_query_with_targets()
             track_list.extend(unique_new_tracks)
             print("Number of tracks: ", len(track_list))
         print("Got track ids")
 
-        if "playlist_name" in self.playlist.get_query():
+        if "playlist_name" in self.playlist.generate_query():
             playlist_name = self.playlist.playlist_name
         else:
             playlist_name = "For your mood"
@@ -225,4 +241,4 @@ class PlaylistHandler:
         )
         print("Made the playlist")
         st.balloons()
-        return self.playlist.get_query(), playlist_id
+        return self.playlist.generate_query(), playlist_id
