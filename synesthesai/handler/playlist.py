@@ -104,7 +104,6 @@ class PlaylistHandler:
                 print()
                 result = music_object(**result[f"{search_type}s"]["items"][0])
                 print(f"Searched for {name}, found: {result.name}")
-                print(result.__dict__)
                 if approximately_the_same_str(name, result.name):
                     print(f"Adding {result.name} to results")
                     # Update this line to create a Track object
@@ -197,7 +196,6 @@ class PlaylistHandler:
         )
         self.get_recommendation_parameters(formatted_prompt, debug=debug)
         print("Got playlist parameters")
-        print("FUOEWHFIUHIUHG")
         playlist_query = self.playlist.generate_playlist_query_with_ranges()
 
         # even if there are enough songs in the filter, the vibe of the playlist
