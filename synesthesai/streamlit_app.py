@@ -45,7 +45,9 @@ class App:
             st.markdown(welcome_msg, unsafe_allow_html=True)
             st.markdown(link_html, unsafe_allow_html=True)
 
-    def get_users_favorite_genres(self, ):
+    def get_users_favorite_genres(
+        self,
+    ):
         pass
 
     def run(self):
@@ -73,7 +75,7 @@ class App:
         if "music_request" not in st.session_state:
             st.session_state[
                 "music_request"
-            ] = "I'm DJing a really cool party in Manhattan. I need music that won't get in the way of people's conversations but will get them moving. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."
+            ] = "Gimme that normie shit. That raw, hardcore, unadulterated dad rock that'll make all the suburban moms scream"
 
         if st.session_state["signed_in"]:
             self.title()
@@ -141,7 +143,7 @@ class App:
 
                         # Restart button
                         st.markdown(
-                            f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>', 
+                            f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>',
                             unsafe_allow_html=True,
                         )
                         # if st.button("make another"):

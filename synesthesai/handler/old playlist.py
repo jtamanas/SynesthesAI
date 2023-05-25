@@ -1,16 +1,22 @@
 import streamlit as st
-from constants import DEBUG_TOML
+from constants import DEFAULT_SEARCH_PARAMETERS, recommendation_genres, DEBUG_TOML
 from prompts.shared_elements import beginning_of_toml
 import random
 from utils import (
     approximately_the_same_str,
+    deep_merge_dicts,
     partial_load_toml,
+    pull_keys_to_top_level,
+    remove_default_attributes,
 )
 import tomllib as toml
 from LLM.openai import OpenAI
 from LLM.palm import PaLM
-from music.playlist import Playlist
 from music.track import Track
+
+# these are attributes that are not meant to be treated like the others
+# re: making min, max, and target arguments
+SPECIAL_ATTRIBUTES = ["year"]
 
 
 class PlaylistHandler:
@@ -22,7 +28,58 @@ class PlaylistHandler:
         self.spotify_handler = spotify_handler
         self.max_tokens = 350
         self.temperature = 1.0
-        self.playlist = None
+
+    def add_mood_to_genres(self, query_dict):
+        """
+        PaLM especially likes to add a "mood" dictionary. Oftentimes, this is just
+        another way to add genres. We might as well add these to the genre list
+        """
+
+        def _add_mood(mood_key, q_dict):
+            if mood_key in q_dict:
+                if "genres" in q_dict:
+                    q_dict["genres"] += q_dict.pop(mood_key)
+                else:
+                    q_dict["genres"] = q_dict.pop(mood_key)
+            return q_dict
+
+        query_dict = _add_mood("mood", q_dict=query_dict)
+        query_dict = _add_mood("moods", q_dict=query_dict)
+        return query_dict
+
+    def get_lists_from_values(self, dict_with_values_key):
+        """
+        Takes in a dictionary with keys whose values are dictionaries.
+        Some of these sub-dictionaries have a values key with a list of values.
+        Extracts the values from these sub-dictionaries and returns a list of them
+        to be used as the value for the key in the original dictionary.
+        """
+        result = {}
+        for key, value in dict_with_values_key.items():
+            if isinstance(value, dict) and "values" in value:
+                result[key] = value["values"]
+            else:
+                result[key] = value
+        return result
+
+    # your methods like get_recommendation_parameters, filter_genres, get_track_recommendations etc.
+    def range_min_max_to_target(self, min_max_dict):
+        """Takes in a dictionary with min,max keys. Returns a dictionary with target keys where target=mean(min, max)"""
+        return {"target": (min_max_dict["min"] + min_max_dict["max"]) / 2}
+
+    def get_playlist_query_with_targets(self, query_dict):
+        """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
+        new_query_dict = {}
+        for key, val in query_dict.items():
+            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
+                try:
+                    new_query_dict[key] = self.range_min_max_to_target(val)
+                except:
+                    print(f"DROPPED {key} BECAUSE IT LACKED MIN/MAX KEYS")
+                    pass
+            else:
+                new_query_dict[key] = val
+        return new_query_dict
 
     def get_recommendation_parameters(self, prompt, debug=True):
         try:
@@ -53,37 +110,104 @@ class PlaylistHandler:
             except Exception as e:
                 print("TOML IS BROKEN. LOADING PARTIAL")
                 playlist_data = partial_load_toml(generated_toml)
-            print("THIS IS THE TOML IMMEDIATELY AFTER PARSING")
 
-            self.playlist = Playlist(**playlist_data)
-            self.add_ids_to_music()
-            # I hate that I'm calling this here
-            self.playlist.limit_number_of_seeds()
+            # Lists are parsed as dictionaries with a values key.
+            # Extract the values from these dictionaries
+            playlist_data = self.get_lists_from_values(playlist_data)
+            playlist_data = self.add_mood_to_genres(playlist_data)
+            print("THIS IS THE TOML IMMEIDATELY AFTER PARSING")
+            print(playlist_data)
+            # merge with default parameters
+            playlist_data = deep_merge_dicts(DEFAULT_SEARCH_PARAMETERS, playlist_data)
+            # drop keys that were never specified. They mess up the search
+            playlist_data = remove_default_attributes(
+                DEFAULT_SEARCH_PARAMETERS, playlist_data, keys_to_keep=["year"]
+            )
+            top_level_keys = [key for key in DEFAULT_SEARCH_PARAMETERS.keys()]
+            pull_keys_to_top_level(playlist_data, top_level_keys)
+
+            print("THIS IS THE TOML AFTER FIXING AND BEFORE LIMITING SEEDS")
+            print(playlist_data)
+
+            playlist_data = self.limit_number_of_seeds_and_get_ids(playlist_data)
 
         except Exception as e:
             print(f"Unexpected error in get_recommendation_parameters: {e}")
             raise
 
-    def add_ids_to_music(self):
+        print("THIS IS THE TOML AT THE END OF THE FUNCTION")
+        print(playlist_data)
+
+        return playlist_data
+
+    def limit_number_of_seeds_and_get_ids(self, query_dict):
+        """
+        Spotify limits the number of seeds to 3, so we need to limit the number of seeds.
+        Additionally, if more than one seed is given, the playlist will be based on the
+        first seed. This is because Spotify will fail if multiple seeds of
+        length > 1 are given.
+        """
+
+        # Filter genres
+        if "genres" in query_dict:
+            query_dict["seed_genres"] = self.filter_genres(query_dict["genres"])
+
         # Get artist IDs
         artist_ids = []
-        if hasattr(self.playlist, "artists"):
+        if "artists" in query_dict:
             artist_ids = self.get_ids_from_search(
-                names=self.playlist.artists,
-                years=self.playlist.year,
+                names=query_dict["artists"],
+                years=query_dict["year"],
                 search_type="artist",
             )
-            self.playlist.seed_artists = artist_ids
+            query_dict["seed_artists"] = artist_ids
 
         # Get track IDs
         track_ids = []
-        if hasattr(self.playlist, "tracks"):
+        if "tracks" in query_dict:
             track_ids = self.get_ids_from_search(
-                names=self.playlist.tracks,
-                years=self.playlist.year,
+                names=query_dict["tracks"],
+                years=query_dict["year"],
                 search_type="track",
             )
-            self.playlist.seed_tracks = track_ids
+            query_dict["seed_tracks"] = track_ids
+
+        # Limit number of seeds
+        if len(artist_ids) > 1 or len(track_ids) > 1:
+            query_dict["seed_genres"] = query_dict.get("seed_genres", [])[:1]
+        if len(track_ids) > 1:
+            query_dict["seed_artists"] = query_dict.get("seed_artists", [])[:1]
+
+        for key in ["seed_artists", "seed_genres", "seed_tracks"]:
+            if key in query_dict:
+                query_dict[key] = query_dict[key][:3]
+
+        return query_dict
+
+    def get_playlist_query_with_ranges(self, spotify_search_dict: dict):
+        new_search_dict = {}
+        for key, val in spotify_search_dict.items():
+            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
+                for range_key, range_val in val.items():
+                    new_search_dict[f"{range_key}_{key}"] = range_val
+            else:
+                new_search_dict[key] = spotify_search_dict[key]
+        return new_search_dict
+
+    def filter_genres(self, genre_names):
+        remaining = []
+        for genre in genre_names:
+            genre = genre.lower()
+            if genre in recommendation_genres:
+                remaining.append(genre)
+        if not remaining:
+            print(genre_names)
+            raise ValueError("No genres returned!")
+        return remaining
+
+    def find_artist(self, artist_id):
+        uri = f"spotify:artist:{artist_id}"
+        return self.spotify_handler.spotify.artist(uri)
 
     def get_ids_from_search(self, names, years, search_type="artist"):
         """search_type can be artist or tracks currently"""
@@ -102,6 +226,14 @@ class PlaylistHandler:
                     pieces.append(result[f"{search_type}s"]["items"][0]["id"])
         return pieces
 
+    def filter_tracks_by_category(self, tracks, category_range):
+        filtered_tracks = []
+        for track in tracks:
+            year = int(track["album"]["release_date"].split("-")[0])
+            if category_range["min"] <= year <= category_range["max"]:
+                filtered_tracks.append(track)
+        return filtered_tracks
+
     def get_track_recommendations(self, genres=[""], limit=10, **kwargs):
         """I pull out genres from kwargs to ensure it doesnt mess up the search"""
         print(kwargs)
@@ -109,7 +241,7 @@ class PlaylistHandler:
             limit=limit, **kwargs
         )["tracks"]
         # filter by year, ensuring only relevant tracks are added
-        tracks = self.playlist.filter_tracks_by_category(
+        tracks = self.filter_tracks_by_category(
             raw_tracks,
             category_range=kwargs["year"],
         )
@@ -162,9 +294,12 @@ class PlaylistHandler:
             print("FAILED to upload playlist photo")
             print(e)
 
-    def get_seed_tracks_query(self, playlist_data, tracks, n=3):
+    def get_seed_tracks_query(self, playlist_data, tracks, n=5):
         track_ids = [track.id for track in tracks]
         random_track_ids = random.sample(track_ids, min(n, len(track_ids)))
+        for key in ["seed_genres", "seed_artists", "seed_tracks"]:
+            if key in playlist_data:
+                playlist_data.pop(key)
         playlist_data["seed_tracks"] = [track for track in random_track_ids]
         return playlist_data
 
@@ -181,9 +316,13 @@ class PlaylistHandler:
         formatted_prompt = prompt.format(
             beginning_of_toml=beginning_of_toml, music_request=music_request
         )
-        self.get_recommendation_parameters(formatted_prompt, debug=debug)
+        raw_playlist_query = self.get_recommendation_parameters(
+            formatted_prompt, debug=debug
+        )
         print("Got playlist parameters")
-        playlist_query = self.playlist.get_playlist_query_with_ranges()
+        range_playlist_query = self.get_playlist_query_with_ranges(raw_playlist_query)
+
+        playlist_query = range_playlist_query
 
         # even if there are enough songs in the filter, the vibe of the playlist
         # tends to wander. By limiting the number of tracks from the initial
@@ -206,13 +345,15 @@ class PlaylistHandler:
             if not unique_new_tracks:
                 # if there are no more songs in the fixed ranges, make them targets
                 print("NO MORE TRACKS IN RANGE. SWITCHING TO TARGETS")
-                playlist_query = self.playlist.get_playlist_query_with_targets()
+                playlist_query = self.get_playlist_query_with_targets(
+                    raw_playlist_query
+                )
             track_list.extend(unique_new_tracks)
             print("Number of tracks: ", len(track_list))
         print("Got track ids")
 
-        if "playlist_name" in self.playlist.get_query():
-            playlist_name = self.playlist.playlist_name
+        if "playlist_name" in raw_playlist_query:
+            playlist_name = raw_playlist_query["playlist_name"]
         else:
             playlist_name = "For your mood"
 
@@ -225,4 +366,4 @@ class PlaylistHandler:
         )
         print("Made the playlist")
         st.balloons()
-        return self.playlist.get_query(), playlist_id
+        return raw_playlist_query, playlist_id
