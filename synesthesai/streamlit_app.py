@@ -6,6 +6,8 @@ from handler.playlist import PlaylistHandler
 from css import css
 from utils import dict_to_string
 import streamlit as st
+from example_moods import example_moods
+import random
 
 
 class App:
@@ -45,9 +47,6 @@ class App:
             st.markdown(welcome_msg, unsafe_allow_html=True)
             st.markdown(link_html, unsafe_allow_html=True)
 
-    def get_users_favorite_genres(self, ):
-        pass
-
     def run(self):
         # setup the page
         # Add some styling with CSS selectors
@@ -71,9 +70,7 @@ class App:
         ### is there another way to do this? clunky to have everything in an if:
 
         if "music_request" not in st.session_state:
-            st.session_state[
-                "music_request"
-            ] = "I'm DJing a really cool party in Manhattan. I need music that won't get in the way of people's conversations but will get them moving. I'll be laughed out of the building if I play anything on the Billboard top 100 so keep it underground."
+            st.session_state["music_request"] = random.choice(example_moods)
 
         if st.session_state["signed_in"]:
             self.title()
@@ -141,7 +138,7 @@ class App:
 
                         # Restart button
                         st.markdown(
-                            f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>', 
+                            f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>',
                             unsafe_allow_html=True,
                         )
                         # if st.button("make another"):
