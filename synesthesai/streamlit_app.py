@@ -6,6 +6,8 @@ from handler.playlist import PlaylistHandler
 from css import css
 from utils import dict_to_string
 import streamlit as st
+from example_moods import example_moods
+import random
 
 
 class App:
@@ -73,9 +75,7 @@ class App:
         ### is there another way to do this? clunky to have everything in an if:
 
         if "music_request" not in st.session_state:
-            st.session_state[
-                "music_request"
-            ] = "Gimme that normie shit. That raw, hardcore, unadulterated dad rock that'll make all the suburban moms scream"
+            st.session_state["music_request"] = random.choice(example_moods)
 
         if st.session_state["signed_in"]:
             self.title()
