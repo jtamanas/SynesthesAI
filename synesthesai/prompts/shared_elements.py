@@ -43,7 +43,7 @@ instructions = """You're the world's best DJ. Using this information, I want you
 
 {yaml_example}
 
-This is the list of genres available on spotify: {list_of_recommendation_genres_str}. Pick at least one genre in this list and don't recommend genres outside of the list. Finally, feel free to suggest up to 4 musical artists as a list of names under the key "artists".""".format(
+This is the list of genres available on spotify: {list_of_recommendation_genres_str}. Every genre you recommend needs to come from that list. Pick at least one genre in this list and DO NOT recommend genres outside of the list. Finally, feel free to suggest up to 4 musical artists as a list of names under the key "artists".""".format(
     yaml_example=yaml_example,
     list_of_recommendation_genres_str=list_of_recommendation_genres_str,
 )

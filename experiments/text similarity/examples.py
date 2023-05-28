@@ -8,6 +8,7 @@ positive_examples = {
     "classic-rock": "rock",
     "hard rock": "rock",
     "dad rock": "rock",
+    "synthwave": "synth-pop",
 }
 
 negative_examples = {
