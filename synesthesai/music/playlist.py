@@ -190,23 +190,32 @@ class Playlist:
         """
         if self.track_list:
             # Get the genres of the first track
-            first_track_genres = self.track_list[0].all_genres
+            idx = 0
+            reference_track_genres = []
+            while not reference_track_genres and idx < len(self.track_list):
+                # sometimes the tracks lack genres. in this case, just get the next available
+                #! we'll end up dropping the genre-less tracks.
+                reference_track_genres = self.track_list[idx].all_genres
+                idx += 1
 
-            # Filter the tracks to only those that share genres with the first track
-            filtered_tracks = [
-                track
-                for track in self.track_list
-                if any(genre in track.all_genres for genre in first_track_genres)
-            ]
+            if reference_track_genres:
+                # Filter the tracks to only those that share genres with the first track
+                filtered_tracks = [
+                    track
+                    for track in self.track_list
+                    if any(
+                        genre in track.all_genres for genre in reference_track_genres
+                    )
+                ]
 
-            # Print a message stating which tracks were dropped
-            dropped_tracks = [
-                track for track in self.track_list if track not in filtered_tracks
-            ]
-            if dropped_tracks:
-                print(f"The following tracks were dropped: {dropped_tracks}")
+                # Print a message stating which tracks were dropped
+                dropped_tracks = [
+                    track for track in self.track_list if track not in filtered_tracks
+                ]
+                if dropped_tracks:
+                    print(f"The following tracks were dropped: {dropped_tracks}")
 
-            self.track_list = filtered_tracks
+                self.track_list = filtered_tracks
 
     def __repr__(self) -> str:
         return dict_to_string(self.__dict__)
