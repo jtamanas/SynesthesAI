@@ -8,18 +8,15 @@ from LLM.openai import OpenAI
 from LLM.palm import PaLM
 
 
-
-
 class ImageHandler:
-
     def __init__(self, image_file: BinaryIO) -> None:
         self.clip_interrogator = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.clip_model = "ViT-H-14/laion2b_s32b_b79k"
         self.image_file = image_file
         self.LLM = PaLM(model="models/text-bison-001")
         self.temperature = 0.7
-        
-        # self.clip_model = "ViT-L-14/openai", 
+
+        # self.clip_model = "ViT-L-14/openai",
         # self.LLM = OpenAI(model="text-curie-001")
         # self.temperature = 1.2
         # self.LLM = OpenAI(model="text-davinci-003")
@@ -45,7 +42,7 @@ class ImageHandler:
         print("Ingested image. Generating description...")
         client = replicate.Client(api_token=st.secrets["REPLICATE_API_KEY"])
         description = client.run(
-            self.clip_interrogator, 
+            self.clip_interrogator,
             input={"image": self.image_file, "mode": "fast"},
             clip_model_name=self.clip_model,
         )
