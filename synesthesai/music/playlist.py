@@ -6,6 +6,7 @@ from utils import (
     deep_merge_dicts,
     dict_to_string,
     filter_values,
+    fuzzy_filter_values,
     pull_keys_to_top_level,
     remove_default_attributes,
 )
@@ -21,6 +22,7 @@ class Playlist:
         self.seed_genres: List[str] = []
         self.seed_artists: List[str] = []
         self.seed_tracks: List[str] = []
+        self.track_list: List[Track] = []
 
         # Lists are parsed as dictionaries with a values key.
         # Extract the values from these dictionaries
@@ -39,10 +41,13 @@ class Playlist:
         print("THIS IS THE TOML AFTER FIXING AND BEFORE LIMITING SEEDS")
         print(playlist_data)
 
-        # playlist_data = self.limit_number_of_seeds_and_get_ids(playlist_data)
-
         for key, value in playlist_data.items():
             setattr(self, key, value)
+
+    def add_tracks(self, tracks: List[Track]):
+        self.track_list.extend(tracks)
+        self.filter_tracks_by_genre()
+        self.sort_playlist_by_tempo()
 
     def add_mood_to_genres(self, query_dict):
         """
@@ -81,6 +86,14 @@ class Playlist:
         """Takes in a dictionary with min,max keys. Returns a dictionary with target keys where target=mean(min, max)"""
         return {"target": (min_max_dict["min"] + min_max_dict["max"]) / 2}
 
+    def increase_min_max_range(self, min_max_dict, change_rate=0.05):
+        """Takes in a dictionary with min,max keys. Returns a dictionary with target keys and values (min=0.95*min, max=1.05*min)"""
+        # max can go above 1.0, but the api can handle this so it's not a problem
+        return {
+            "min": (1 - change_rate / 2) * min_max_dict["min"],
+            "max": (1 + change_rate / 2) * min_max_dict["max"],
+        }
+
     def limit_number_of_seeds(self):
         """
         Spotify limits the number of seeds to 3, so we need to limit the number of seeds.
@@ -90,7 +103,16 @@ class Playlist:
         """
 
         # Filter genres
-        self.seed_genres = filter_values(self.genres, recommendation_genres)
+        genres = self.genres
+        splits = []
+        for string in genres:
+            splits.extend(string.split())
+        genres = genres + splits
+        self.seed_genres = filter_values(genres, recommendation_genres)
+        if not self.seed_genres:
+            self.seed_genres = fuzzy_filter_values(
+                genres, recommendation_genres, cutoff=0.6
+            )
 
         # Limit number of seeds
         if len(self.seed_artists) > 1 or len(self.seed_tracks) > 1:
@@ -120,15 +142,19 @@ class Playlist:
                 new_search_dict[key] = self.generate_query()[key]
         return new_search_dict
 
-    def generate_playlist_query_with_targets(self):
+    def generate_playlist_query_with_increased_range(self):
         """Assumes it gets {other:val, ..., min_key:, max_key:, min_key1:, max_key1:, ...}"""
         new_query_dict = {}
         for key, val in self.generate_query().items():
-            if isinstance(val, dict) and key not in SPECIAL_ATTRIBUTES:
+            SKIP_THESE_KEYS = ["year", "tempo"]
+            if isinstance(val, dict) and key not in SKIP_THESE_KEYS:
                 try:
-                    new_query_dict[key] = self.range_min_max_to_target(val)
+                    if val["max"] == 0:
+                        # If 0, it can never be increased. Nudge it up so it can be increased
+                        val["max"] = 0.01
+                    new_query_dict[key] = self.increase_min_max_range(val)
                 except:
-                    print(f"DROPPED {key} BECAUSE IT LACKED MIN/MAX KEYS")
+                    print(f"DROPPED {key} BECAUSE IT LACKED VALID MIN/MAX KEYS")
                     pass
             else:
                 new_query_dict[key] = val
@@ -157,5 +183,83 @@ class Playlist:
                 filtered_tracks.append(track)
         return filtered_tracks
 
+    def filter_tracks_by_genre(self):
+        """
+        The first track sets the tone of the playlist.
+        Make sure that all tracks share genres with the original track.
+        """
+        if self.track_list:
+            # Get the genres of the first track
+            first_track_genres = self.track_list[0].all_genres
+
+            # Filter the tracks to only those that share genres with the first track
+            filtered_tracks = [
+                track
+                for track in self.track_list
+                if any(genre in track.all_genres for genre in first_track_genres)
+            ]
+
+            # Print a message stating which tracks were dropped
+            dropped_tracks = [
+                track for track in self.track_list if track not in filtered_tracks
+            ]
+            if dropped_tracks:
+                print(f"The following tracks were dropped: {dropped_tracks}")
+
+            self.track_list = filtered_tracks
+
     def __repr__(self) -> str:
         return dict_to_string(self.__dict__)
+
+    def sort_playlist_by_tempo(self):
+        """
+        Sorts the playlist by tempo, with the first song staying in its place.
+
+        First, the remaining songs are sorted by tempo in ascending order.
+        Then, they are split into two lists:
+            one for songs with tempo less than the first song's tempo,
+            and another for songs with tempo greater than or equal to the first song's tempo.
+            Each of these two sublists is then split again in half (by skipping indices)
+
+
+        The list with the shorter length is then merged with the first song,
+            Before it is, however, it is split in half (by alternating indices)
+                Its second subsublist is reverse ordered and recombined with the first subsublist
+
+        followed by the other list in the opposite order.
+        """
+
+        def _from_sorted_to_local_extremum(l):
+            even_list = l[::2]
+            odd_list = l[1::2]
+            l = even_list + list(reversed(odd_list))
+            return l
+
+        if self.track_list:
+            first_song = self.track_list[0]
+            remaining_songs = sorted(self.track_list[1:], key=lambda x: x.tempo)
+
+            less_tempo = [
+                song for song in remaining_songs if song.tempo < first_song.tempo
+            ]
+            greater_or_equal_tempo = [
+                song for song in remaining_songs if song.tempo >= first_song.tempo
+            ]
+
+            less_tempo = sorted(less_tempo, key=lambda x: x.tempo, reverse=True)
+            greater_or_equal_tempo = sorted(
+                greater_or_equal_tempo, key=lambda x: x.tempo
+            )
+            if len(less_tempo) < len(greater_or_equal_tempo):
+                less_tempo = _from_sorted_to_local_extremum(less_tempo)
+
+                smoothed_track_list = [first_song] + less_tempo + greater_or_equal_tempo
+            else:
+                greater_or_equal_tempo = _from_sorted_to_local_extremum(
+                    greater_or_equal_tempo
+                )
+
+                smoothed_track_list = [first_song] + greater_or_equal_tempo + less_tempo
+
+            print([t.tempo for t in smoothed_track_list])
+            self.track_list = smoothed_track_list

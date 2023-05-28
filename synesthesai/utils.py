@@ -93,7 +93,7 @@ def partial_load_toml(broken_toml_text):
     raise TOMLDecodeError("TOML completely unsalvageable")
 
 
-def approximately_the_same_str(a, b, cutoff=0.6):
+def approximately_the_same_str(a, b, cutoff=0.5):
     def _remove_parentheticals(t):
         return re.sub("[\(\[].*?[\)\]]", "", t)
 
@@ -113,17 +113,17 @@ def filter_values(list_to_filter, valid_values):
     return remaining
 
 
-def fuzzy_filter_values(list_to_filter, valid_values, match_multiple=True):
+def fuzzy_filter_values(list_to_filter, valid_values, match_multiple=True, cutoff=0.5):
     remaining = []
     for value in list_to_filter:
         value = value.lower()
         for valid in valid_values:
-            if approximately_the_same_str(value, valid):
+            if approximately_the_same_str(value, valid, cutoff=cutoff):
                 remaining.append(valid)
                 if not match_multiple:
                     break
     if not remaining:
         print("NO VALID VALUES RETURNED!")
-        print("BUT WE GOT THESE VALUES")
+        print("THESE ARE THE VALUES WE LOOKED FOR")
         print(list_to_filter)
     return remaining
