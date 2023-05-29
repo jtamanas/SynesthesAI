@@ -218,14 +218,38 @@ class PlaylistHandler:
         debug=False,
         num_tracks=15,
         num_enhanced_tracks_to_add=2,
+        progress_bar=None,
     ):
+        def _update_progress_bar():
+            print("Number of tracks: ", len(self.playlist.track_list))
+            if progress_bar:
+                progress_bar.progress(
+                    0.10 + min(0.9, len(self.playlist.track_list) / (num_tracks + 1)),
+                    text="curating your playlist...",
+                )
+
         music_request = music_request or ""
         formatted_prompt = prompt.format(
             beginning_of_toml=beginning_of_toml, music_request=music_request
         )
+
+        if progress_bar:
+            progress_bar.progress(
+                0,
+                text="elucidating the essence...",
+            )
+
         self.get_recommendation_parameters(formatted_prompt, debug=debug)
         print("Got playlist parameters")
         playlist_query = self.playlist.generate_playlist_query_with_ranges()
+
+        # we restrict the number of enhanced tracks to add to limit the scope
+        # of the generated playlist. If there are a small number of keys specified,
+        # it can make the playlist take a long time to generate.
+        # Let's try increasing the number of enhanced tracks if the
+        # number of specified keys is < 5
+        if len(self.playlist.modes_and_keys) < 5:
+            num_enhanced_tracks_to_add += 1
 
         # even if there are enough songs in the filter, the vibe of the playlist
         # tends to wander. By limiting the number of tracks from the initial
@@ -233,7 +257,7 @@ class PlaylistHandler:
         # start with one song unless seed track is specified.
         track_list = self.get_track_recommendations(limit=1, **playlist_query)
         self.playlist.add_tracks(track_list)
-        print("Number of tracks: ", len(self.playlist.track_list))
+        _update_progress_bar()
         while len(self.playlist.track_list) < num_tracks:
             print("Enhancing the playlist...")
             if self.playlist.track_list:
@@ -254,7 +278,7 @@ class PlaylistHandler:
                     self.playlist.generate_playlist_query_with_increased_range()
                 )
             self.playlist.add_tracks(unique_new_tracks)
-            print("Number of tracks: ", len(self.playlist.track_list))
+            _update_progress_bar()
         print("Got track ids")
 
         if "playlist_name" in self.playlist.generate_query():

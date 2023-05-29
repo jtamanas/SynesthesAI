@@ -6,7 +6,7 @@ example_moods = [
     "Got a case of the 80s. I need something so synth it bleeds neon",
     "Road trip down the coast. We're turning seagulls into headbangers here",
     "It's a lazy pancake morning. Bring on the auditory butter and syrup, make it as cozy as my bunny slippers",
-    "Finals week, baby. On a scale of espresso to Red Bull, I need something closer to an energy drink infused with jet fuel",
+    "Finals week, baby. On a scale of espresso to Red Bull, I need jet fuel",
     "Stargazing on a cloudless night. Bring the cosmos seem just a little bit closer",
     "Gardening on a crisp day. Let's make Mother Nature proud and make the worms wiggle",
     "Bring on the auditory surf and sand vibes for this sunset chill session by the beach. Me want vitamin sea",

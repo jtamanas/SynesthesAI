@@ -116,34 +116,37 @@ class App:
 
             if music_request and music_request != st.session_state["music_request"]:
                 if len(music_request) > 2:
-                    with st.spinner("making your playlist..."):
-                        placeholder.empty()
-                        (
-                            playlist_data,
-                            playlist_id,
-                        ) = self.playlist_generator.generate_playlist(
-                            username=username,
-                            prompt=prompt,
-                            music_request=music_request,
-                            debug=False,
+                    print("THIS IS THE USER PROMPT")
+                    print(music_request)
+                    progress_bar = st.progress(0, text="making your playlist...")
+                    placeholder.empty()
+                    (
+                        playlist_data,
+                        playlist_id,
+                    ) = self.playlist_generator.generate_playlist(
+                        username=username,
+                        prompt=prompt,
+                        music_request=music_request,
+                        debug=False,
+                        progress_bar=progress_bar,
+                    )
+
+                    if uploaded_image:
+                        self.playlist_generator.set_playlist_cover_image(
+                            playlist_id, image_handler.image_b64
                         )
 
-                        if uploaded_image:
-                            self.playlist_generator.set_playlist_cover_image(
-                                playlist_id, image_handler.image_b64
-                            )
+                    st.session_state["music_request"] = music_request
+                    st.text(dict_to_string(playlist_data))
 
-                        st.session_state["music_request"] = music_request
-                        st.text(dict_to_string(playlist_data))
-
-                        # Restart button
-                        st.markdown(
-                            f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>',
-                            unsafe_allow_html=True,
-                        )
-                        # if st.button("make another"):
-                        #     st.caching.clear_cache()
-                        #     st.experimental_rerun()
+                    # Restart button
+                    st.markdown(
+                        f'<a href="{self.spotify_handler.oauth.get_authorize_url()}" >RESTART</a>',
+                        unsafe_allow_html=True,
+                    )
+                    # if st.button("make another"):
+                    #     st.caching.clear_cache()
+                    #     st.experimental_rerun()
                     uploaded_image = None
 
 

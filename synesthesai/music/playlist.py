@@ -43,10 +43,26 @@ class Playlist:
 
         for key, value in playlist_data.items():
             setattr(self, key, value)
+        self.parse_keys()
+
+    def parse_keys(self):
+        specified_modes_and_keys = set()
+        if hasattr(self, "keys"):
+            for key in self.keys:
+                # first 0-11 are minor, second 12-23 are major. order of keys is repeated
+                mode = key // 12
+                key = key % 12
+                specified_modes_and_keys.add((mode, key))
+        self.min_mode = min(mode for mode, _ in specified_modes_and_keys)
+        self.max_mode = max(mode for mode, _ in specified_modes_and_keys)
+        self.min_key = min(key for _, key in specified_modes_and_keys)
+        self.max_key = max(key for _, key in specified_modes_and_keys)
+        self.modes_and_keys = specified_modes_and_keys
 
     def add_tracks(self, tracks: List[Track]):
         self.track_list.extend(tracks)
         self.filter_tracks_by_genre()
+        self.filter_tracks_by_mode_and_key()
         self.sort_playlist_by_tempo()
 
     def add_mood_to_genres(self, query_dict):
@@ -183,6 +199,29 @@ class Playlist:
                 filtered_tracks.append(track)
         return filtered_tracks
 
+    def filter_tracks_by_mode_and_key(self):
+        filtered_tracks = []
+        if self.track_list and self.modes_and_keys:
+            for track in self.track_list:
+                if hasattr(track, "key") and hasattr(track, "mode") and track.key != -1:
+                    # -1 means spotify did not assign a key to the track
+                    if (track.mode, track.key) in self.modes_and_keys:
+                        filtered_tracks.append(track)
+                else:
+                    filtered_tracks.append(track)
+
+        # Print a message stating which tracks were dropped
+        dropped_tracks = [
+            track for track in self.track_list if track not in filtered_tracks
+        ]
+        if dropped_tracks:
+            print(f"The following tracks were dropped bc of keys: {dropped_tracks}")
+
+        print("TEST")
+        print("HERE ARE THE TRACKS' (MODE, KEY)")
+        print([(track.mode, track.key) for track in filtered_tracks])
+        self.track_list = filtered_tracks
+
     def filter_tracks_by_genre(self):
         """
         The first track sets the tone of the playlist.
@@ -213,7 +252,9 @@ class Playlist:
                     track for track in self.track_list if track not in filtered_tracks
                 ]
                 if dropped_tracks:
-                    print(f"The following tracks were dropped: {dropped_tracks}")
+                    print(
+                        f"The following tracks were dropped bc of genre: {dropped_tracks}"
+                    )
 
                 self.track_list = filtered_tracks
 
