@@ -16,7 +16,7 @@ class Gemini(BaseLLM):
 
         harm_categories = [
             # "DEROGATORY",
-            "TOXICITY",
+            # "TOXICITY",
             "VIOLENCE",
             "SEXUAL",
             "MEDICAL",
