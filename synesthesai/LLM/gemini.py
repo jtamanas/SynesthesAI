@@ -26,16 +26,20 @@ class Gemini(BaseLLM):
             "SEXUALLY_EXPLICIT",
             "DANGEROUS_CONTENT"
         ]
-        self.safety_settings = [
-            {
-                "category": getattr(
-                    safety_types.HarmCategory, f"HARM_CATEGORY_{category}"
-                ),
-                "threshold": safety_types.HarmBlockThreshold.BLOCK_NONE,
-            }
-            for category in harm_categories
-        ]
-
+        
+        safety_settings = []
+        for category in harm_categories:
+            try:
+                safety_settings.append(
+                    {
+                        "category": getattr(
+                            safety_types.HarmCategory, f"HARM_CATEGORY_{category}"
+                        ),
+                        "threshold": safety_types.HarmBlockThreshold.BLOCK_NONE,
+                    }
+                )
+            except:
+                print(f"Couldn't find HARM_CATEGORY_{category}")
         super().__init__(model=model)
 
     def complete(
