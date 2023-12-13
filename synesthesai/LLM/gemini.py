@@ -38,7 +38,7 @@ class Gemini(BaseLLM):
         self, prompt: str, temperature: float = 1.0, max_tokens: int = 300
     ) -> str:
         response = self.model.generate_content(
-            prompt=prompt,
+            prompt,
             temperature=temperature,
             max_output_tokens=max_tokens,
             safety_settings=self.safety_settings,
