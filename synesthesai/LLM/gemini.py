@@ -15,7 +15,7 @@ class Gemini(BaseLLM):
         model = genai.GenerativeModel(models[0].name)
 
         harm_categories = [
-            "DEROGATORY",
+            # "DEROGATORY",
             "TOXICITY",
             "VIOLENCE",
             "SEXUAL",
@@ -26,21 +26,16 @@ class Gemini(BaseLLM):
             "SEXUALLY_EXPLICIT",
             "DANGEROUS_CONTENT"
         ]
-        
-        safety_settings = []
-        for category in harm_categories:
-            try:
-                safety_settings.append(
-                    {
-                        "category": getattr(
-                            safety_types.HarmCategory, f"HARM_CATEGORY_{category}"
-                        ),
-                        "threshold": safety_types.HarmBlockThreshold.BLOCK_NONE,
-                    }
-                )
-            except:
-                print(f"Couldn't find HARM_CATEGORY_{category}")
-        self.safety_settings = safety_settings
+        self.safety_settings = [
+            {
+                "category": getattr(
+                    safety_types.HarmCategory, f"HARM_CATEGORY_{category}"
+                ),
+                "threshold": safety_types.HarmBlockThreshold.BLOCK_NONE,
+            }
+            for category in harm_categories
+        ]
+
         super().__init__(model=model)
 
     def complete(
