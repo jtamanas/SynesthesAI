@@ -40,6 +40,7 @@ class Gemini(BaseLLM):
                 )
             except:
                 print(f"Couldn't find HARM_CATEGORY_{category}")
+        self.safety_settings = safety_settings
         super().__init__(model=model)
 
     def complete(
