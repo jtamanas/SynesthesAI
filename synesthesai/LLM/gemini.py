@@ -12,7 +12,7 @@ class Gemini(BaseLLM):
             for m in genai.list_models()
             if ("generateContent" in m.supported_generation_methods) and (m.name == model)
         ]
-        model = models[0].name
+        model = genai.GenerativeModel(models[0].name)
 
         harm_categories = [
             "DEROGATORY",
@@ -37,8 +37,7 @@ class Gemini(BaseLLM):
     def complete(
         self, prompt: str, temperature: float = 1.0, max_tokens: int = 300
     ) -> str:
-        response = genai.generate_text(
-            model=self.model,
+        response = self.model.generate_content(
             prompt=prompt,
             temperature=temperature,
             max_output_tokens=max_tokens,
