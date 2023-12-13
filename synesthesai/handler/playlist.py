@@ -10,16 +10,16 @@ from utils import (
 )
 import tomllib as toml
 from LLM.openai import OpenAI
-from LLM.palm import PaLM
+from LLM.gemini import Gemini
 from music.artist import Artist
 from music.playlist import Playlist
 from music.track import Track
 
 
 class PlaylistHandler:
-    def __init__(self, spotify_handler, LLM_type="PaLM"):
-        if LLM_type == "PaLM":
-            self.LLM = PaLM(model="models/text-bison-001")
+    def __init__(self, spotify_handler, LLM_type="Gemini"):
+        if LLM_type == "Gemini":
+            self.LLM = Gemini(model="models/gemini-pro")
         elif LLM_type == "OpenAI":
             self.LLM = OpenAI(model="text-davinci-003")
         self.spotify_handler = spotify_handler

@@ -5,7 +5,7 @@ from io import BytesIO
 import streamlit as st
 import replicate
 from LLM.openai import OpenAI
-from LLM.palm import PaLM
+from LLM.gemini import Gemini
 
 
 class ImageHandler:
@@ -13,7 +13,7 @@ class ImageHandler:
         self.clip_interrogator = "pharmapsychotic/clip-interrogator:a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90"
         self.clip_model = "ViT-H-14/laion2b_s32b_b79k"
         self.image_file = image_file
-        self.LLM = PaLM(model="models/text-bison-001")
+        self.LLM = Gemini(model="models/gemini-pro")
         self.temperature = 0.7
 
         # self.clip_model = "ViT-L-14/openai",

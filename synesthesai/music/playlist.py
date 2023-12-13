@@ -67,7 +67,6 @@ class Playlist:
 
     def add_mood_to_genres(self, query_dict):
         """
-        PaLM especially likes to add a "mood" dictionary. Oftentimes, this is just
         another way to add genres. We might as well add these to the genre list
         """
 

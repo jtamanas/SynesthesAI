@@ -1,16 +1,16 @@
 from LLM.base import BaseLLM
-import google.generativeai as palm
+import google.generativeai as genai
 from google.generativeai.types import safety_types
 import streamlit as st
 
 
-class PaLM(BaseLLM):
-    def __init__(self, model: str = "models/text-bison-001") -> None:
-        palm.configure(api_key=st.secrets["PALM_API_KEY"])
+class Gemini(BaseLLM):
+    def __init__(self, model: str = "models/gemini-pro") -> None:
+        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
         models = [
             m
-            for m in palm.list_models()
-            if ("generateText" in m.supported_generation_methods) and (m.name == model)
+            for m in genai.list_models()
+            if ("generateContent" in m.supported_generation_methods) and (m.name == model)
         ]
         model = models[0].name
 
@@ -37,14 +37,14 @@ class PaLM(BaseLLM):
     def complete(
         self, prompt: str, temperature: float = 1.0, max_tokens: int = 300
     ) -> str:
-        response = palm.generate_text(
+        response = genai.generate_content(
             model=self.model,
             prompt=prompt,
             temperature=temperature,
             max_output_tokens=max_tokens,
             safety_settings=self.safety_settings,
         )
-        result = response.result
+        result = response.text
         if result is None:
             print(response)
         return result
