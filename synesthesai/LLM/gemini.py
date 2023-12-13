@@ -37,7 +37,7 @@ class Gemini(BaseLLM):
     def complete(
         self, prompt: str, temperature: float = 1.0, max_tokens: int = 300
     ) -> str:
-        response = genai.generate_content(
+        response = genai.generate_text(
             model=self.model,
             prompt=prompt,
             temperature=temperature,
