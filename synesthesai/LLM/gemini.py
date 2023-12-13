@@ -17,10 +17,14 @@ class Gemini(BaseLLM):
         harm_categories = [
             "DEROGATORY",
             "TOXICITY",
-            "SEXUAL",
             "VIOLENCE",
-            "DANGEROUS",
+            "SEXUAL",
             "MEDICAL",
+            "DANGEROUS",
+            "HARASSMENT",
+            "HATE_SPEECH",
+            "SEXUALLY_EXPLICIT",
+            "DANGEROUS_CONTENT"
         ]
         self.safety_settings = [
             {
