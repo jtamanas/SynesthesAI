@@ -19,13 +19,12 @@ class ImageHandler:
     def describe(self):
         """Describe the full image."""
         print("Ingested image. Generating description...")
-        result = self.vision_model.complete(
+        description = self.vision_model.complete(
             prompt=self.description_prompt, 
             image=self.image_PIL, 
             temperature=self.temperature, 
             max_tokens=self.max_tokens,
         )
-        description = result.text
         print("Description:", description)
 
         return description
