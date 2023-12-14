@@ -1,6 +1,5 @@
 openai
 requests
-replicate
 google-generativeai
 numpy
 pandas
