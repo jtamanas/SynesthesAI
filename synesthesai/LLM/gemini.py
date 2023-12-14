@@ -22,7 +22,6 @@ class Gemini(BaseLLM):
         ]
         self.safety_settings = {category: "block_none" for category in harm_categories}
 
-
         super().__init__(model=model)
 
     def complete(
