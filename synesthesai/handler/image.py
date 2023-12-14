@@ -21,7 +21,7 @@ class ImageHandler:
         print("Ingested image. Generating description...")
         result = self.vision_model.complete(
             prompt=self.description_prompt, 
-            image=self.image_file, 
+            image=self.image_PIL, 
             temperature=self.temperature, 
             max_tokens=self.max_tokens,
         )
@@ -59,4 +59,4 @@ class ImageHandler:
     @property
     def image_PIL(self):
         """Return the image as a PIL image."""
-        return Image.open(io.BytesIO(self.image_file))
+        return Image.open(self.image_file)
