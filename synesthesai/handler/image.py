@@ -59,4 +59,4 @@ class ImageHandler:
     @property
     def image_PIL(self):
         """Return the image as a PIL image."""
-        return Image.open(io.BytesIO(self.image_file)
+        return Image.open(io.BytesIO(self.image_file))
