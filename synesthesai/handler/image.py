@@ -3,7 +3,7 @@ import base64
 import io
 from PIL import Image
 from io import BytesIO
-from synesthesai.vision.gemini_vision import GeminiVision
+from vision.gemini_vision import GeminiVision
 
 
 class ImageHandler:
