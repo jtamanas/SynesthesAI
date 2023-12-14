@@ -1,13 +1,14 @@
-"""CLIP Interrogation can result in some goofy descriptions sometimes. Use an (cheap) openai call to make it less silly before passing on to playlist recommendation."""
+"""CLIP Interrogation can result in some goofy descriptions sometimes. Use a (cheap) LLM call to make it less silly before passing on to playlist recommendation."""
 
-import openai
+import google.generativeai as genai
+
 import os
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 import matplotlib.pyplot as plt  # not in requirements.txt
 
 # Set API key
-openai.api_key = os.environ["OPENAI_API_KEY"]
+genai.config(api_key=os.environ["PALM_API_KEY"]
 
 # Define the description, engines, prompts, and temperatures
 description = "a cartoon snail with a colorful shell on its back, snail, elon musk as slimy mollusk, nacre, art of angrysnail, snail shell, transparent goo, nacre colors, colourful slime, gary, snail in the style of nfl logo, inkscape, it's name is greeny, slimy, cell shaded cartoon, turbo"

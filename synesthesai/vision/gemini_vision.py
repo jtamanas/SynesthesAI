@@ -1,10 +1,11 @@
+import PIL
 from LLM.base import BaseLLM
 import google.generativeai as genai
 import streamlit as st
 
 
-class Gemini(BaseLLM):
-    def __init__(self, model: str = "models/gemini-pro") -> None:
+class GeminiVision(BaseLLM):
+    def __init__(self, model: str = "models/gemini-pro-vision") -> None:
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
         models = [
             m
@@ -24,10 +25,11 @@ class Gemini(BaseLLM):
         super().__init__(model=model)
 
     def complete(
-        self, prompt: str, temperature: float = 1.0, max_tokens: int = 300
+        self, prompt: str, image: PIL.Image, temperature: float = 1.0, max_tokens: int = 300
     ) -> str:
+        content = [prompt, image]
         response = self.model.generate_content(
-            prompt,
+            content,
             generation_config=genai.types.GenerationConfig(
                 temperature=temperature,
                 max_output_tokens=max_tokens,
