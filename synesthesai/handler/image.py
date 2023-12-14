@@ -21,7 +21,7 @@ class ImageHandler:
         print("Ingested image. Generating description...")
         result = self.vision_model.complete(
             prompt=self.description_prompt, 
-            image=self.image_PIL, 
+            image=self.image_file, 
             temperature=self.temperature, 
             max_tokens=self.max_tokens,
         )
