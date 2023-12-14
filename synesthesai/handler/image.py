@@ -13,7 +13,7 @@ class ImageHandler:
         self.vision_model = GeminiVision(model="models/gemini-pro-vision")
         self.temperature = 1.0
         
-        self.max_tokens = 60
+        self.max_tokens = 90
         self.description_prompt = """Write a very brief description of this picture. Focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. No more than two sentences."""
         
     def describe(self):
