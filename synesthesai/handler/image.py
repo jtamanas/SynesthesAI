@@ -25,7 +25,7 @@ class ImageHandler:
             temperature=self.temperature, 
             max_tokens=self.max_tokens,
         )
-        description = description.text
+        description = result.text
         print("Description:", description)
 
         return description
