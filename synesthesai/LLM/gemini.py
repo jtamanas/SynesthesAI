@@ -15,26 +15,13 @@ class Gemini(BaseLLM):
         model = genai.GenerativeModel(models[0].name)
 
         harm_categories = [
-            # "DEROGATORY",
-            # "TOXICITY",
-            "VIOLENCE",
             "SEXUAL",
-            "MEDICAL",
             "DANGEROUS",
             "HARASSMENT",
             "HATE_SPEECH",
-            "SEXUALLY_EXPLICIT",
-            "DANGEROUS_CONTENT"
         ]
-        self.safety_settings = [
-            {
-                "category": getattr(
-                    safety_types.HarmCategory, f"HARM_CATEGORY_{category}"
-                ),
-                "threshold": safety_types.HarmBlockThreshold.BLOCK_NONE,
-            }
-            for category in harm_categories
-        ]
+        self.safety_settings = {category: "block_none" for category in harm_categories}
+
 
         super().__init__(model=model)
 
@@ -43,8 +30,10 @@ class Gemini(BaseLLM):
     ) -> str:
         response = self.model.generate_content(
             prompt,
-            temperature=temperature,
-            max_output_tokens=max_tokens,
+            generation_config=genai.types.GenerationConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            ),
             safety_settings=self.safety_settings,
         )
         result = response.text
