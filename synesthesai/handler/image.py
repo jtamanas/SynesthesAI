@@ -26,7 +26,6 @@ class ImageHandler:
             max_tokens=self.max_tokens,
         )
         print("Description:", description)
-
         return description
 
     def resize_and_convert(self, image, small=False):

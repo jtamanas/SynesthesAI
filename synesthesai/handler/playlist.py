@@ -24,7 +24,7 @@ class PlaylistHandler:
             self.LLM = OpenAI(model="text-davinci-003")
         self.spotify_handler = spotify_handler
         self.max_tokens = 350
-        self.temperature = 1.0
+        self.temperature = 0.7
         self.playlist = None
 
     def get_recommendation_parameters(self, prompt, debug=True):
