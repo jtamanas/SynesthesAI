@@ -11,7 +11,7 @@ class ImageHandler:
         self.image_file = image_file
         
         self.vision_model = GeminiVision(model="models/gemini-pro-vision")
-        self.temperature = 0.7
+        self.temperature = 0.86
         
         self.max_tokens = 90
         self.description_prompt = """Write a very brief description of this picture. Focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. No more than two sentences."""
