@@ -1,55 +1,45 @@
-"""CLIP Interrogation can result in some goofy descriptions sometimes. Use a (cheap) LLM call to make it less silly before passing on to playlist recommendation."""
+"""Use gemini vision to get the vibes from the image."""
 
-import google.generativeai as genai
 
-import os
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
-import matplotlib.pyplot as plt  # not in requirements.txt
+import matplotlib.pyplot as plt
+from io import BytesIO
+from ...handler.image import ImageHandler
+
 
 # Set API key
-genai.config(api_key=os.environ["PALM_API_KEY"]
+
+
+with open('cartoon_snail.png', 'rb') as f:
+    model = ImageHandler(BytesIO(f.read()))
 
 # Define the description, engines, prompts, and temperatures
-description = "a cartoon snail with a colorful shell on its back, snail, elon musk as slimy mollusk, nacre, art of angrysnail, snail shell, transparent goo, nacre colors, colourful slime, gary, snail in the style of nfl logo, inkscape, it's name is greeny, slimy, cell shaded cartoon, turbo"
-engines = [
-    "text-davinci-003",
-    "text-davinci-002",
-    "text-curie-001",
-    # "text-babbage-001",
-    # "text-ada-001",
-]
 prompts = [
-    # "Summarize the following description focusing on tone and emotion",
-    # "Give a brief summary of the following artistic description",
-    "Rephrase the following description of an image. Be sure to include the emotions evoked by said image",
-    "Rewrite this description of an image. Focus on specific feelings and emotions evoked",
+    "Write a very brief description of this picture. Focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. Really focus on the emotional response and less so on the objective reality. Write no more than two sentences.",
+    "Do not describe this picture. Instead focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. Really focus on the emotional response and less so on the objective reality. Write no more than two sentences.",
+    "I want a playlist built around this image. What feelings does it evoke? What kind of genres and which musical artists would be appropriate?",
+    "I'm blind, but a friend said I'd love this image. I'm wondering if I could make a playlist that would allow me to experience the same feelings that seeing this image would. What feelings does this image evoke? What kind of genres and which musical artists would be appropriate?",
+    
 ]
-temperatures = [0.5, 0.7, 1.0, 1.2]
+temperatures = [0.25, 0.5, 0.7, 0.85, 1.0]
 
 # Create a DataFrame for all combinations of engines, prompts, and temperatures
 df = pd.DataFrame(
     [
-        (engine, prompt, temperature)
-        for engine in engines
+        (prompt, temperature)
         for prompt in prompts
         for temperature in temperatures
     ],
-    columns=["engine", "prompt", "temperature"],
+    columns=[ "prompt", "temperature"],
 )
-
-# Add the common description to all rows
-df["description"] = description
 
 
 def get_summary(row):
-    response = openai.Completion.create(
-        engine=row["engine"],
-        prompt=f"{row['prompt']}: '{row['description']}'",
-        temperature=row["temperature"],
-        max_tokens=60,
-    )
-    return response.choices[0].text.strip()
+    model.description_prompt = row["prompt"]
+    model.temperature = row["temperature"]
+    response = model.describe()
+    return response.strip()
 
 
 # Apply the function to each row in your DataFrame
@@ -70,11 +60,3 @@ pp = PdfPages("Summarization_report.pdf")
 pp.savefig(fig, bbox_inches="tight")
 pp.close()
 
-
-# My fav for starry night is text-davinci-003 with temp=0.5
-# My fav for the cartoon snail is text-curie-001 with temp=1.2
-# This also performed well on starry night, so I'm going to try it out
-
-
-# Davinci does quite well with  "Rewrite this description of an image. Focus on the feelings and emotions evoked"
-# I'm going to try this out with temp=0.9

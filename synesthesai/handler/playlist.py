@@ -150,13 +150,17 @@ class PlaylistHandler:
                     else item
                     for item in kwargs[seed]
                 ]
+        print("made it past for loop in track recs")
 
         raw_tracks = self.spotify_handler.spotify.recommendations(
-            limit=limit, **kwargs
+            limit=limit#, **kwargs
         )["tracks"]
+        print("made it past get recs")
 
         all_track_objects = [Track(**track) for track in raw_tracks]
         all_track_objects = self.add_details_to_tracks(all_track_objects)
+        print("made it past add details")
+        
         # filter by year, ensuring only relevant tracks are added
         filtered_track_objects = self.playlist.filter_tracks_by_category(
             all_track_objects,
@@ -242,7 +246,6 @@ class PlaylistHandler:
         self.get_recommendation_parameters(formatted_prompt, debug=debug)
         print("Got playlist parameters")
         playlist_query = self.playlist.generate_playlist_query_with_ranges()
-
         # we restrict the number of enhanced tracks to add to limit the scope
         # of the generated playlist. If there are a small number of keys specified,
         # it can make the playlist take a long time to generate.

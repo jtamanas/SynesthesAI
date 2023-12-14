@@ -14,7 +14,7 @@ class ImageHandler:
         self.temperature = 1.0
         
         self.max_tokens = 60
-        self.description_prompt = """Write a very brief description of this picture. Focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. Really focus on the emotional response and less so on the objective reality. Write no more than two sentences."""
+        self.description_prompt = """I'm blind, but a friend said I'd love this image. I'm wondering if I could make a playlist that would allow me to experience the same feelings that seeing this image would. What feelings does this image evoke? What kind of genres and which musical artists would be appropriate?"""
         
     def describe(self):
         """Describe the full image."""
