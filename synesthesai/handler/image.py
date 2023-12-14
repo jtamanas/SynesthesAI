@@ -14,7 +14,7 @@ class ImageHandler:
         self.temperature = 1.0
         
         self.max_tokens = 60
-        self.description_prompt = """Write a description of this picture. Focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. No more than two sentences."""
+        self.description_prompt = """Write a very brief description of this picture. Focus on specific emotions, aesthetics, and genres. Feel free to add details of any musical genres it may invoke. No more than two sentences."""
         
     def describe(self):
         """Describe the full image."""
