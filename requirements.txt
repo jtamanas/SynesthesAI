@@ -7,4 +7,4 @@ Pillow
 spotipy
 toml
 tqdm
-urllib3
+urllib3==2.7.0
