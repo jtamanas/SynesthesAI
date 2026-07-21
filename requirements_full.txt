@@ -41,7 +41,7 @@ numpy==2.2.6
 openai==0.28.1
 packaging==26.2
 pandas==2.3.3
-pillow==12.2.0
+pillow==12.3.0
 propcache==0.4.1
 proto-plus==1.27.2
 protobuf==5.29.6
